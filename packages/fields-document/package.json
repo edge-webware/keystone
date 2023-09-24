@@ -1,7 +1,7 @@
 {
   "name": "@keystone-6/fields-document",
   "description": "KeystoneJS Document Field Type",
-  "version": "8.0.0",
+  "version": "8.0.2",
   "license": "MIT",
   "main": "dist/keystone-6-fields-document.cjs.js",
   "module": "dist/keystone-6-fields-document.esm.js",
@@ -44,12 +44,10 @@
       "structure-views.tsx"
     ]
   },
-  "peerDependencies": {
-    "@keystone-6/core": "^5.0.0"
-  },
+  "repository": "https://github.com/keystonejs/keystone/tree/main/packages/fields-document",
   "dependencies": {
     "@babel/runtime": "^7.16.3",
-    "@braintree/sanitize-url": "^6.0.0",
+    "@braintree/sanitize-url": "^6.0.1",
     "@dnd-kit/core": "^6.0.6",
     "@dnd-kit/modifiers": "^6.0.1",
     "@dnd-kit/sortable": "^7.0.1",
@@ -64,7 +62,6 @@
     "@keystone-ui/tooltip": "^6.0.2",
     "@types/react": "^18.0.9",
     "apply-ref": "^1.0.0",
-    "fp-ts": "^2.11.5",
     "graphql": "^16.6.0",
     "io-ts": "^2.2.16",
     "io-ts-excess": "^1.0.1",
@@ -82,14 +79,15 @@
     "slate-history": "^0.93.0",
     "slate-react": "^0.97.1"
   },
-  "repository": "https://github.com/keystonejs/keystone/tree/main/packages/fields-document",
   "devDependencies": {
-    "@keystone-6/core": "*",
+    "@keystone-6/core": "workspace:^",
     "@testing-library/react": "^14.0.0",
     "@types/is-hotkey": "^0.1.7",
-    "array.prototype.flat": "^1.2.5",
     "jest-diff": "^29.0.0",
     "pretty-format": "^29.0.0",
     "slate-hyperscript": "^0.81.3"
+  },
+  "peerDependencies": {
+    "@keystone-6/core": "^5.0.0"
   }
 }

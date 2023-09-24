@@ -1,13 +1,14 @@
-import { GraphQLResolveInfo } from 'graphql';
-import { ScalarType, EnumType, EnumValue } from '@graphql-ts/schema';
-import { QueryMode, KeystoneContext, BaseItem, MaybePromise } from '../../types';
-import { graphql as graphqlBoundToKeystoneContext } from '../..';
-import {
+import type { GraphQLResolveInfo } from 'graphql';
+import type { ScalarType, EnumType, EnumValue } from '@graphql-ts/schema';
+import type { KeystoneContext, BaseItem, MaybePromise } from '../types';
+import { QueryMode } from '../types';
+import { graphql as graphqlBoundToKeystoneContext } from '../types/schema';
+import type {
   FieldMetaRootVal,
   ListMetaRootVal,
   AdminMetaRootVal,
   FieldGroupMeta,
-} from './createAdminMeta';
+} from './create-admin-meta';
 
 type Context = KeystoneContext | { isAdminUIBuildProcess: true };
 
@@ -228,19 +229,25 @@ const adminMeta = graphql.object<AdminMetaRootVal>()({
   },
 });
 
+function defaultIsAccessAllowed({ session, sessionStrategy }: KeystoneContext) {
+  if (!sessionStrategy) return true;
+  return session !== undefined;
+}
+
 export const KeystoneMeta = graphql.object<{ adminMeta: AdminMetaRootVal }>()({
   name: 'KeystoneMeta',
   fields: {
     adminMeta: graphql.field({
       type: graphql.nonNull(adminMeta),
       resolve({ adminMeta }, args, context) {
-        if ('isAdminUIBuildProcess' in context || adminMeta.isAccessAllowed === undefined) {
+        if ('isAdminUIBuildProcess' in context) {
           return adminMeta;
         }
-        return Promise.resolve(adminMeta.isAccessAllowed(context)).then(isAllowed => {
-          if (isAllowed) {
-            return adminMeta;
-          }
+
+        const isAccessAllowed = adminMeta?.isAccessAllowed ?? defaultIsAccessAllowed;
+        return Promise.resolve(isAccessAllowed(context)).then(isAllowed => {
+          if (isAllowed) return adminMeta;
+
           // TODO: ughhhhhh, we really need to talk about errors.
           // mostly unrelated to above: error or return null here(+ make field nullable)?s
           throw new Error('Access denied');

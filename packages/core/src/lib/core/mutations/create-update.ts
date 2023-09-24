@@ -1,6 +1,6 @@
-import { KeystoneContext, BaseItem } from '../../../types';
-import { ResolvedDBField } from '../resolve-relationships';
-import { InitialisedList } from '../types-for-lists';
+import type { KeystoneContext, BaseItem } from '../../../types';
+import type { ResolvedDBField } from '../resolve-relationships';
+import type { InitialisedList } from '../initialise-lists';
 import {
   promiseAllRejectWithAllErrors,
   getDBFieldKeyForFieldOnMultiField,
@@ -299,13 +299,10 @@ async function getResolvedData(
   resolvedData = Object.fromEntries(
     await Promise.all(
       Object.entries(list.fields).map(async ([fieldKey, field]) => {
-        if (field.hooks.resolveInput === undefined) return [fieldKey, resolvedData[fieldKey]];
-
-        const resolver = field.hooks.resolveInput;
         try {
           return [
             fieldKey,
-            await resolver({
+            await field.hooks.resolveInput({
               ...hookArgs,
               resolvedData,
               fieldKey,
@@ -380,7 +377,7 @@ async function resolveInputForCreateOrUpdate(
         // `hookArgs` based on the `operation` which will make `hookArgs.item`
         // be the right type for `originalItem` for the operation
         hookArgs.operation === 'create'
-          ? { ...hookArgs, item: updatedItem, originalItem: hookArgs.item }
+          ? { ...hookArgs, item: updatedItem, originalItem: undefined }
           : { ...hookArgs, item: updatedItem, originalItem: hookArgs.item }
       );
     },

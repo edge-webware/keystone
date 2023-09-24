@@ -6,7 +6,7 @@ import { getGenerators, formatSchema } from '@prisma/internals';
 import type { KeystoneConfig } from './types';
 import { printGeneratedTypes } from './lib/schema-type-printer';
 import { ExitError } from './scripts/utils';
-import { initialiseLists } from './lib/core/types-for-lists';
+import { initialiseLists } from './lib/core/initialise-lists';
 import { printPrismaSchema } from './lib/core/prisma-schema-printer';
 import { initConfig } from './lib/config';
 
@@ -96,9 +96,17 @@ export function getSystemPaths(cwd: string, config: KeystoneConfig) {
     ? path.join(cwd, config.types.path)
     : path.join(cwd, 'node_modules/.keystone/types.ts');
 
+  const builtPrismaPath = config.db?.prismaSchemaPath
+    ? path.join(cwd, config.db.prismaSchemaPath)
+    : path.join(cwd, 'schema.prisma');
+
   const relativePrismaPath = prismaClientPath
     ? `./${posixify(path.relative(path.dirname(builtTypesPath), prismaClientPath))}`
     : '@prisma/client';
+
+  const builtGraphqlPath = config.graphql?.schemaPath
+    ? path.join(cwd, config.graphql.schemaPath)
+    : path.join(cwd, 'schema.graphql');
 
   return {
     config: getBuiltKeystoneConfigurationPath(cwd),
@@ -109,8 +117,8 @@ export function getSystemPaths(cwd: string, config: KeystoneConfig) {
     },
     schema: {
       types: builtTypesPath,
-      prisma: path.join(cwd, 'schema.prisma'),
-      graphql: path.join(cwd, 'schema.graphql'),
+      prisma: builtPrismaPath,
+      graphql: builtGraphqlPath,
     },
   };
 }
@@ -187,7 +195,6 @@ export async function generateTypescriptTypesAndPrisma(
   if (dataProxy === true) {
     console.log('✨ Generating Prisma Client (data proxy)');
   }
-
   await Promise.all([
     generatePrismaClient(paths.schema.prisma, dataProxy),
     generateTypescriptTypes(cwd, config, graphQLSchema),

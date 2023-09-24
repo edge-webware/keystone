@@ -1,10 +1,10 @@
 import { GraphQLNamedType, GraphQLSchema } from 'graphql';
 
-import type { KeystoneConfig } from '../types';
-import { KeystoneMeta } from '../admin-ui/system/adminMetaSchema';
 import { graphql } from '../types/schema';
-import { AdminMetaRootVal } from '../admin-ui/system/createAdminMeta';
-import { InitialisedList } from './core/types-for-lists';
+import type { KeystoneConfig } from '../types';
+import { KeystoneMeta } from './admin-meta-resolver';
+import type { AdminMetaRootVal } from './create-admin-meta';
+import type { InitialisedList } from './core/initialise-lists';
 
 import { getMutationsForList } from './core/mutations';
 import { getQueriesForList } from './core/queries';
@@ -97,7 +97,7 @@ function collectTypes(
 export function createGraphQLSchema(
   config: KeystoneConfig,
   lists: Record<string, InitialisedList>,
-  adminMeta: AdminMetaRootVal,
+  adminMeta: AdminMetaRootVal | null,
   sudo: boolean
 ) {
   const graphQLSchema = getGraphQLSchema(
@@ -116,12 +116,14 @@ export function createGraphQLSchema(
             }),
           }
         : {},
-      query: {
-        keystone: graphql.field({
-          type: graphql.nonNull(KeystoneMeta),
-          resolve: () => ({ adminMeta }),
-        }),
-      },
+      query: adminMeta
+        ? {
+            keystone: graphql.field({
+              type: graphql.nonNull(KeystoneMeta),
+              resolve: () => ({ adminMeta }),
+            }),
+          }
+        : {},
     },
     sudo
   );

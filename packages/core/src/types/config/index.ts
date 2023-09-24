@@ -68,9 +68,9 @@ export type StorageConfig = (
       /** Your s3 instance's region */
       region: string;
       /** An access Key ID with write access to your S3 instance */
-      accessKeyId: string;
+      accessKeyId?: string;
       /** The secret access key that gives permissions to your access Key Id */
-      secretAccessKey: string;
+      secretAccessKey?: string;
       /** An endpoint to use - to be provided if you are not using AWS as your endpoint */
       endpoint?: string;
       /** If true, will force the 'old' S3 path style of putting bucket name at the start of the pathname of the URL  */
@@ -148,6 +148,8 @@ export type DatabaseConfig<TypeInfo extends BaseKeystoneTypeInfo> = {
   enableLogging?: boolean | PrismaLogLevel | Array<PrismaLogLevel | PrismaLogDefinition>;
   idField?: IdFieldConfig;
   prismaClientPath?: string;
+  prismaSchemaPath?: string;
+
   extendPrismaSchema?: (schema: string) => string;
 
   /** @deprecated */
@@ -190,24 +192,27 @@ export type AdminFileToWrite =
   | { mode: 'copy'; inputPath: string; outputPath: string };
 
 // config.server
-
-type HealthCheckConfig = {
-  path?: string;
-  data?: Record<string, any> | (() => Record<string, any>);
-};
-
 export type ServerConfig<TypeInfo extends BaseKeystoneTypeInfo> = {
   /** Configuration options for the cors middleware. Set to `true` to use core Keystone defaults */
   cors?: CorsOptions | true;
   /** Maximum upload file size allowed (in bytes) */
   maxFileSize?: number;
-  /** Health check configuration. Set to `true` to add a basic `/_healthcheck` route, or specify the path and data explicitly */
-  healthCheck?: HealthCheckConfig | true;
-  /** Hook to extend the Express App that Keystone creates */
+
+  /** @deprecated */
+  healthCheck?:
+    | true
+    | {
+        path?: string;
+        data?: Record<string, any> | (() => Record<string, any>);
+      };
+
+  /** extend the Express application used by Keystone */
   extendExpressApp?: (
     app: express.Express,
     context: KeystoneContext<TypeInfo>
   ) => void | Promise<void>;
+
+  /** extend the node:http server used by Keystone */
   extendHttpServer?: (
     server: Server,
     context: KeystoneContext<TypeInfo>,
@@ -279,6 +284,12 @@ export type GraphQLConfig<TypeInfo extends BaseKeystoneTypeInfo = BaseKeystoneTy
    * @default process.env.NODE_ENV !== 'production'
    */
   debug?: boolean;
+
+  /**
+   * The path to GraphQL schema
+   * @default 'schema.graphql'
+   */
+  schemaPath?: string;
 };
 
 // config.extendGraphqlSchema

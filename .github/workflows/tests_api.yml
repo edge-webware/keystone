@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mariadb:11.0
+        image: mariadb:11.1
         # we use the root user because our tests create databases
         env:
           MYSQL_ROOT_PASSWORD: testpass
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
@@ -142,7 +142,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mariadb:11.0
+        image: mariadb:11.1
         env:
           MYSQL_ROOT_PASSWORD: testpass
         ports:

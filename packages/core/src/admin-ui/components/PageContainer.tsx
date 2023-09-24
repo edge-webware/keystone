@@ -2,7 +2,8 @@
 /** @jsx jsx */
 
 import { jsx, useTheme } from '@keystone-ui/core';
-import { Fragment, HTMLAttributes, ReactNode } from 'react';
+import { Fragment, HTMLAttributes, ReactNode, useState } from 'react';
+import { MenuIcon, XCircleIcon } from '@keystone-ui/icons';
 
 import { Navigation } from './Navigation';
 import { Logo } from './Logo';
@@ -25,10 +26,14 @@ const PageWrapper = (props: HTMLAttributes<HTMLElement>) => {
         css={{
           // background: colors.background,
           display: 'grid',
-          gridTemplateColumns: `minmax(300px, 1fr) 4fr`,
-          gridTemplateRows: `${HEADER_HEIGHT}px auto`,
+          gridTemplateColumns: `minmax(300px, 1fr)`,
+          gridTemplateRows: `repeat(2,${HEADER_HEIGHT}px) auto`,
           height: '100vh',
           isolation: 'isolate',
+          '@media (min-width: 576px)': {
+            gridTemplateColumns: `minmax(300px, 1fr) 4fr`,
+            gridTemplateRows: `${HEADER_HEIGHT}px auto`,
+          },
         }}
         {...props}
       />
@@ -36,19 +41,40 @@ const PageWrapper = (props: HTMLAttributes<HTMLElement>) => {
   );
 };
 
-const Sidebar = (props: HTMLAttributes<HTMLElement>) => {
+const Sidebar = ({
+  isSidebarOpen,
+  ...props
+}: HTMLAttributes<HTMLElement> & {
+  isSidebarOpen: boolean;
+}) => {
   // const { colors } = useTheme();
 
   return (
-    <aside
+    <div
       css={{
-        // borderRight: `1px solid ${colors.border}`,
-        minWidth: 0, // resolves collapsing issues in children
+        gridColumn: '1/2',
+        gridRow: '2/4',
+        display: isSidebarOpen ? 'block' : 'none',
+        height: '100vh',
+        '@media (min-width: 576px)': {
+          gridColumn: '1/2',
+          gridRow: '2/3',
+          display: 'block',
+          height: '100%',
+        },
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
       }}
-      {...props}
-    />
+    >
+      <aside
+        css={{
+          // borderRight: `1px solid ${colors.border}`,
+          minWidth: 0, // resolves collapsing issues in children
+          WebkitOverflowScrolling: 'touch',
+        }}
+        {...props}
+      />
+    </div>
   );
 };
 
@@ -74,6 +100,7 @@ const Content = (props: HTMLAttributes<HTMLElement>) => {
 
 export const PageContainer = ({ children, header, title }: PageContainerProps) => {
   const { colors, spacing } = useTheme();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   return (
     <PageWrapper>
       <div
@@ -88,6 +115,14 @@ export const PageContainer = ({ children, header, title }: PageContainerProps) =
         }}
       >
         <Logo />
+        <div
+          onClick={() => {
+            setIsSidebarOpen(!isSidebarOpen);
+          }}
+          css={{ display: 'block', '@media (min-width: 576px)': { display: 'none' } }}
+        >
+          {isSidebarOpen ? <XCircleIcon /> : <MenuIcon />}
+        </div>
       </div>
       <header
         css={{
@@ -99,12 +134,14 @@ export const PageContainer = ({ children, header, title }: PageContainerProps) =
           minWidth: 0, // fix flex text truncation
           paddingLeft: spacing.xlarge,
           paddingRight: spacing.xlarge,
+          visibility: isSidebarOpen ? 'hidden' : 'visible',
         }}
       >
         <title>{title ? `Keystone - ${title}` : 'Keystone'}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         {header}
       </header>
-      <Sidebar>
+      <Sidebar isSidebarOpen={isSidebarOpen}>
         <Navigation />
       </Sidebar>
       <Content>{children}</Content>

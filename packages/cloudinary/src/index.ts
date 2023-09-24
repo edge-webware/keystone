@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import {
   CommonFieldConfig,
   BaseListTypeInfo,
@@ -5,7 +6,6 @@ import {
   jsonFieldTypePolyfilledForSQLite,
 } from '@keystone-6/core/types';
 import { graphql } from '@keystone-6/core';
-import { createId as cuid2 } from '@paralleldrive/cuid2';
 import cloudinary from 'cloudinary';
 import { CloudinaryAdapter } from './cloudinary';
 
@@ -115,6 +115,7 @@ export const cloudinaryImage =
     if ((config as any).isIndexed === 'unique') {
       throw Error("isIndexed: 'unique' is not a supported option for field type cloudinaryImage");
     }
+
     const adapter = new CloudinaryAdapter(cloudinary);
     const inputArg = graphql.arg({ type: graphql.Upload });
     const resolveInput = async (
@@ -140,7 +141,7 @@ export const cloudinaryImage =
       const { id, filename, _meta } = await adapter.save({
         stream,
         filename: originalFilename,
-        id: cuid2(),
+        id: randomBytes(20).toString('base64url'),
       });
 
       return { id, filename, originalFilename, mimetype, encoding, _meta };

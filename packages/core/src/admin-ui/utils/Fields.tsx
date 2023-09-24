@@ -10,6 +10,7 @@ import { Value } from '.';
 type RenderFieldProps = {
   field: FieldMeta;
   value: unknown;
+  itemValue: unknown;
   onChange?(value: (value: Value) => Value): void;
   autoFocus?: boolean;
   forceValidation?: boolean;
@@ -18,6 +19,7 @@ type RenderFieldProps = {
 const RenderField = memo(function RenderField({
   field,
   value,
+  itemValue,
   autoFocus,
   forceValidation,
   onChange,
@@ -32,6 +34,7 @@ const RenderField = memo(function RenderField({
         };
       }, [onChange, field.controller.path])}
       value={value}
+      itemValue={itemValue}
       autoFocus={autoFocus}
       forceValidation={forceValidation}
     />
@@ -83,6 +86,7 @@ export function Fields({
           key={fieldKey}
           field={field}
           value={val.value}
+          itemValue={value}
           forceValidation={forceValidation && invalidFields.has(fieldKey)}
           onChange={fieldMode === 'edit' ? onChange : undefined}
           autoFocus={index === 0}
@@ -178,18 +182,22 @@ function FieldGroup(props: { label: string; description: string | null; children
             </Text>
           </Stack>
         </summary>
-        <Stack across gap="medium">
-          <div css={{ width: buttonSize }} />
-          {divider}
-          <div>
+        <div css={{ display: 'flex' }}>
+          <div css={{ display: 'flex' }}>
+            <Stack across gap="medium">
+              <div css={{ width: buttonSize }} />
+              {divider}
+            </Stack>
+          </div>
+          <Stack marginLeft="medium" css={{ width: '100%' }}>
             {props.description !== null && (
               <FieldDescription id={descriptionId}>{props.description}</FieldDescription>
             )}
-            <Stack marginTop="xlarge" gap="xlarge">
+            <Stack marginTop="large" gap="xlarge">
               {props.children}
             </Stack>
-          </div>
-        </Stack>
+          </Stack>
+        </div>
       </details>
     </div>
   );

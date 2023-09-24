@@ -6,8 +6,9 @@ import { stars } from './2-stars-field';
 import { pair } from './3-pair-field';
 import { pair as pairNested } from './3-pair-field-nested';
 import { pair as pairJson } from './3-pair-field-json';
+import { feedback } from './4-conditional-field';
 
-import { Lists } from '.keystone/types';
+import type { Lists } from '.keystone/types';
 
 export const lists: Lists = {
   Post: list({
@@ -51,6 +52,17 @@ export const lists: Lists = {
           description: 'A star rating, with a scale of 5',
         },
       }),
+
+      feedback: feedback({
+        dependency: {
+          field: 'rating',
+          minimumValue: 3,
+        },
+        ui: {
+          description: 'Additional feedback as to the rating',
+        },
+      }),
+
       pair: pair({
         ui: {
           description: 'One string, two database string fields (e.g "foo bar")',
