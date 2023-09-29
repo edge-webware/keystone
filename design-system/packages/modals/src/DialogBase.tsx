@@ -62,6 +62,8 @@ export const DialogBase = ({ children, isOpen, onClose, width, ...props }: Dialo
                   boxShadow: theme.shadow.s400,
                   transition: `transform 150ms ${easing}`,
                   width,
+                  maxHeight: '90vh',
+                  overflow: 'scroll',
                   zIndex: theme.elevation.e400,
                 }}
                 {...props}
