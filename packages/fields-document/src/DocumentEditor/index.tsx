@@ -485,6 +485,10 @@ export const editorSchema = satisfies<
     allowedChildren: insideOfLayouts,
     invalidPositionHandleMode: 'unwrap',
   }),
+  background: blockContainer({
+    allowedChildren: [...insideOfLayouts, 'layout'],
+    invalidPositionHandleMode: 'move',
+  }),
   blockquote: blockContainer({
     allowedChildren: blockquoteChildren,
     invalidPositionHandleMode: 'move',

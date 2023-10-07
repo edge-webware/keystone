@@ -76,6 +76,28 @@ const inline = t.union([text, link, relationship]);
 
 type Children = (Block | Inline)[];
 
+type Background = {
+  type: 'background';
+  backgroundSettings: {
+    type: string;
+    value: string;
+  }
+  children: Children;
+}
+
+const backgroundContainer: t.Type<Background> = t.recursion('BackgroundContainer', () =>
+  excess(
+    t.type({
+      type: t.literal('background'),
+      backgroundSettings: t.type({
+        type: t.string,
+        value: t.string,
+      }),
+      children,
+    })
+  )
+);
+
 const layoutArea: t.Type<Layout> = t.recursion('Layout', () =>
   excess(
     t.type({

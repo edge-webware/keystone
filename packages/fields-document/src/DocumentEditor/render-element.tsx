@@ -10,6 +10,7 @@ import { LinkElement } from './link';
 import { HeadingElement } from './heading';
 import { BlockquoteElement } from './blockquote';
 import { RelationshipElement } from './relationship';
+import { BackgroundContainer } from './background';
 
 // some of the renderers read properties of the element
 // and TS doesn't understand the type narrowing when doing a spread for some reason
@@ -26,6 +27,14 @@ export const renderElement = (props: RenderElementProps) => {
       );
     case 'layout-area':
       return <LayoutArea {...props} />;
+    case 'background':
+      return (
+        <BackgroundContainer
+          attributes={props.attributes}
+          children={props.children}
+          element={props.element}
+        />
+      );
     case 'code':
       return <CodeElement {...props} />;
     case 'component-block': {
