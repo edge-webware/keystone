@@ -106,6 +106,7 @@ export type DocumentFeatures = {
   links: boolean;
   dividers: boolean;
   layouts: [number, ...number[]][];
+  background: boolean;
 };
 
 export const controller = (

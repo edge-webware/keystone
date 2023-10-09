@@ -68,6 +68,7 @@ export type DocumentFieldConfig<ListTypeInfo extends BaseListTypeInfo> =
     links?: true;
     dividers?: true;
     layouts?: readonly (readonly [number, ...number[]])[];
+    background: true;
     db?: { map?: string; extendPrismaSchema?: (field: string) => string };
   };
 
@@ -77,6 +78,7 @@ export const document =
     dividers,
     formatting,
     layouts,
+    background,
     relationships: configRelationships,
     links,
     ...config
@@ -86,6 +88,7 @@ export const document =
       dividers,
       formatting,
       layouts,
+      background,
       links,
     });
     const relationships = normaliseRelationships(configRelationships, meta);
@@ -201,7 +204,7 @@ function normaliseRelationships(
 function normaliseDocumentFeatures(
   config: Pick<
     DocumentFieldConfig<BaseListTypeInfo>,
-    'formatting' | 'dividers' | 'layouts' | 'links'
+    'formatting' | 'dividers' | 'layouts' | 'links' | 'background'
   >
 ) {
   const formatting: FormattingConfig =
@@ -273,8 +276,10 @@ function normaliseDocumentFeatures(
     layouts: [...new Set((config.layouts || []).map(x => JSON.stringify(x)))].map(x =>
       JSON.parse(x)
     ),
+    background: !!config.background,
     dividers: !!config.dividers,
   };
+  console.log("this may be where is breaks", documentFeatures)
   return documentFeatures;
 }
 

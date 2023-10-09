@@ -46,6 +46,8 @@ import { ToolbarStateProvider } from './toolbar-state';
 import { withInsertMenu } from './insert-menu';
 import { withBlockMarkdownShortcuts } from './block-markdown-shortcuts';
 import { withPasting } from './pasting';
+import { withBackgrounds } from './background';
+import { paragraphElement } from './paragraphs';
 
 // the docs site needs access to Editor and importing slate would use the version from the content field
 // so we're exporting it from here (note that this is not at all visible in the published version)
@@ -194,6 +196,10 @@ export function DocumentEditor({
     [documentFeatures, componentBlocks, relationships]
   );
 
+  console.log(editor, "insider the document editor")
+  Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: 'This is the text' }] });
+  console.log(editor, "after")
+  console.log(value, "this is a value that I jsut added")
   return (
     <div
       css={{
@@ -208,6 +214,7 @@ export function DocumentEditor({
         editor={editor}
         value={value}
         onChange={value => {
+          console.log("inside onchange")
           onChange?.(value);
           // this fixes a strange issue in Safari where the selection stays inside of the editor
           // after a blur event happens but the selection is still in the editor
@@ -284,6 +291,9 @@ export function DocumentEditorProvider({
 }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const identity = useMemo(() => Math.random().toString(36), [editor]);
+  console.log(children, editor, value, "this is something here")
+  console.log(Node.isNodeList(value), "this is the value")
+  console.log(componentBlocks, documentFeatures, relationships, "this is more info")
   return (
     <Slate
       // this fixes issues with Slate crashing when a fast refresh occcurs
@@ -291,14 +301,17 @@ export function DocumentEditorProvider({
       editor={editor}
       initialValue={value}
       onChange={value => {
+        console.log("on change v2")
         onChange(value);
         // this fixes a strange issue in Safari where the selection stays inside of the editor
         // after a blur event happens but the selection is still in the editor
         // so the cursor is visually in the wrong place and it inserts text backwards
         const selection = window.getSelection();
         if (selection && !ReactEditor.isFocused(editor)) {
+          console.log("first if")
           const editorNode = ReactEditor.toDOMNode(editor, editor);
           if (selection.anchorNode === editorNode) {
+            console.log("second if")
             ReactEditor.focus(editor);
           }
         }
@@ -317,6 +330,7 @@ export function DocumentEditorProvider({
 
 export function DocumentEditorEditable(props: EditableProps) {
   const editor = useSlate();
+  console.log("gotten here")
   const componentBlocks = useContext(ComponentBlockContext);
 
   const onKeyDown = useMemo(() => getKeyDownHandler(editor), [editor]);
@@ -326,6 +340,7 @@ export function DocumentEditorEditable(props: EditableProps) {
       decorate={useCallback(
         ([node, path]: NodeEntry<Node>) => {
           let decorations: Range[] = [];
+          console.log(node.children, "this is node children")
           if (node.type === 'component-block') {
             if (
               node.children.length === 1 &&

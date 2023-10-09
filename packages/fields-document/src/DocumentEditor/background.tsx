@@ -9,6 +9,7 @@ import { jsx, useTheme } from '@keystone-ui/core';
 import { Tooltip } from '@keystone-ui/tooltip';
 import { Trash2Icon } from '@keystone-ui/icons/icons/Trash2Icon';
 import { ToolIcon } from '@keystone-ui/icons/icons/ToolIcon';
+import { ImageIcon } from '@keystone-ui/icons/icons/ImageIcon';
 
 import { useControlledPopover } from '@keystone-ui/popover';
 import { DocumentFeatures } from '../views';
@@ -52,6 +53,7 @@ export const BackgroundContainer = ({
   const [ backgroundType, setBackgroundType ] = useState<string>(backgroundContext.backgroundType);
   const [ backgroundValue, setBackgroundValue ] = useState<string>(backgroundContext.backgroundValue);
 
+  console.log("This is insider the container")
 
   return (
     <div css={{
@@ -141,6 +143,7 @@ export const BackgroundContainer = ({
 };
 
 export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: { type: string, value: string } ) => {
+  console.log("inside of insert background")
   insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(editor, [
     {
       type: 'background',
@@ -148,10 +151,46 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
       children: [{ type: 'paragraph', children: [{ text: '' }] }],
     }
   ]);
-  const backgroundEntry = Editor.above(editor, { match: n => n.type === 'background' });
-  console.log(backgroundEntry);
 };
 
 export function withBackgrounds(editor: Editor) {
-  return 
+  console.log("this is first editor", editor)
+  Transforms.insertNodes(editor, paragraphElement, { at: [0] });
+  console.log("just editor", editor)
+  return editor;
 }
+
+const backgroundIcon = <ImageIcon size="small" />;
+
+export const BackgroundButton = () => {
+  console.log("in button")
+  const {
+    editor,
+    layouts: { isSelected },
+  } = useToolbarState();
+  return useMemo(
+    () => (
+      <Tooltip content="Layouts" weight="subtle">
+        {attrs => (
+          <ToolbarButton
+            isSelected={isSelected}
+            onMouseDown={event => {
+              event.preventDefault();
+              if (isElementActive(editor, 'background')) {
+                Transforms.unwrapNodes(editor, {
+                  match: node => node.type === 'background',
+                });
+                return;
+              }
+              insertBackgroundContainer(editor, { type: 'color', value: '#ffffff' });
+            }}
+            {...attrs}
+          >
+            {backgroundIcon}
+          </ToolbarButton>
+        )}
+      </Tooltip>
+    ),
+    [editor, isSelected]
+  );
+};

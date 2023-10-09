@@ -294,6 +294,7 @@ export const ToolbarStateProvider = ({
   relationships: Relationships;
 }) => {
   const editor = useSlate();
+  console.log("Toolbar")
 
   return (
     <DocumentFieldRelationshipsProvider value={relationships}>

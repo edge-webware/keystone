@@ -37,6 +37,7 @@ import { linkButton } from './link';
 import { BlockComponentsButtons, ComponentBlockContext } from './component-blocks';
 import { clearFormatting, Mark, modifierKeyText } from './utils';
 import { LayoutsButton } from './layouts';
+import { BackgroundButton } from './background';
 import { ListButton } from './lists';
 import { blockquoteButton } from './blockquote';
 import { DocumentFieldRelationshipsContext, RelationshipButton } from './relationship';
@@ -109,6 +110,7 @@ export function Toolbar({
         {documentFeatures.links && linkButton}
         {documentFeatures.formatting.blockTypes.blockquote && blockquoteButton}
         {!!documentFeatures.layouts.length && <LayoutsButton layouts={documentFeatures.layouts} />}
+        {/*documentFeatures.background && <BackgroundButton /> */}
         {documentFeatures.formatting.blockTypes.code && codeButton}
         {!!hasBlockItems && <InsertBlockMenu />}
       </ToolbarGroup>

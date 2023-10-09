@@ -119,6 +119,7 @@ const onlyChildrenElements: t.Type<OnlyChildrenElements> = t.recursion('OnlyChil
     t.type({
       type: t.union([
         t.literal('blockquote'),
+        t.literal('background'),
         t.literal('layout-area'),
         t.literal('code'),
         t.literal('divider'),
@@ -135,6 +136,7 @@ const onlyChildrenElements: t.Type<OnlyChildrenElements> = t.recursion('OnlyChil
 type OnlyChildrenElements = {
   type:
     | 'blockquote'
+    | 'background'
     | 'layout-area'
     | 'code'
     | 'divider'
