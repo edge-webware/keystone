@@ -74,6 +74,12 @@ export const BackgroundContainer = ({
       >
         {children}
       </div>
+    </div>
+  );
+};
+
+/*
+
       {focused && selected && (
         <InlineDialog ref={dialog.ref} {...dialog.props} css={{ padding: 0 }}>
           <ToolbarGroup>
@@ -138,9 +144,7 @@ export const BackgroundContainer = ({
           </Tooltip>
         </InlineDialog>
       )}
-    </div>
-  );
-};
+*/
 
 export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: { type: string, value: string } ) => {
   console.log("inside of insert background")
@@ -148,15 +152,45 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
     {
       type: 'background',
       backgroundSettings,
-      children: [{ type: 'paragraph', children: [{ text: '' }] }],
+      children: [],
     }
   ]);
+  const backgroundEntry = Editor.above(editor, { match: x => x.type === 'background' });
+  console.log("Shalom", backgroundEntry)
+  if (backgroundEntry) {
+    Transforms.select(editor, [...backgroundEntry[1], 0]);
+  }
 };
 
 export function withBackgrounds(editor: Editor) {
-  console.log("this is first editor", editor)
-  Transforms.insertNodes(editor, paragraphElement, { at: [0] });
-  console.log("just editor", editor)
+  const { normalizeNode, isVoid } = editor;
+
+  editor.isVoid = element => {
+    return element.type === 'background' ? false : isVoid(element);
+  };
+
+  editor.normalizeNode = entry => {
+    const [node, path] = entry;
+
+    // If the node is a background and has no children or the children aren't blocks, insert a default block
+    if (node.type === 'background') {
+      if (node.children.length === 0 || !Element.isElement(node.children[0])) {
+        Transforms.insertNodes(
+          editor,
+          {
+            type: 'paragraph',
+            children: [{ text: '' }]
+          },
+          { at: path.concat([0]) }
+        );
+        return;
+      }
+    }
+
+    // If it's not a background, fall back to the original normalizeNode
+    normalizeNode(entry);
+  };
+
   return editor;
 }
 
@@ -170,7 +204,7 @@ export const BackgroundButton = () => {
   } = useToolbarState();
   return useMemo(
     () => (
-      <Tooltip content="Layouts" weight="subtle">
+      <Tooltip content="Background Settings" weight="subtle">
         {attrs => (
           <ToolbarButton
             isSelected={isSelected}

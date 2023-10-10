@@ -197,7 +197,6 @@ export function DocumentEditor({
   );
 
   console.log(editor, "insider the document editor")
-  Transforms.insertNodes(editor, { type: 'paragraph', children: [{ text: 'This is the text' }] });
   console.log(editor, "after")
   console.log(value, "this is a value that I jsut added")
   return (

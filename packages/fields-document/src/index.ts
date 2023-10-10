@@ -68,7 +68,7 @@ export type DocumentFieldConfig<ListTypeInfo extends BaseListTypeInfo> =
     links?: true;
     dividers?: true;
     layouts?: readonly (readonly [number, ...number[]])[];
-    background: true;
+    background?: true;
     db?: { map?: string; extendPrismaSchema?: (field: string) => string };
   };
 
@@ -279,7 +279,6 @@ function normaliseDocumentFeatures(
     background: !!config.background,
     dividers: !!config.dividers,
   };
-  console.log("this may be where is breaks", documentFeatures)
   return documentFeatures;
 }
 

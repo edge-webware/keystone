@@ -139,20 +139,30 @@ export function insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(
   nodes: Node | Node[]
 ) {
   let pathRefForEmptyNodeAtCursor: PathRef | undefined;
+  console.log("insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading")
   const entry = Editor.above(editor, {
     match: node => node.type === 'heading' || node.type === 'paragraph',
   });
+  console.log("entry", entry)
   if (entry && Node.string(entry[0]) === '') {
+    console.log("inside of if 1")
     pathRefForEmptyNodeAtCursor = Editor.pathRef(editor, entry[1]);
   }
-  Transforms.insertNodes(editor, nodes);
+  console.log("pathRefForEmptyNodeAtCursor", pathRefForEmptyNodeAtCursor)
+  console.log(nodes, "nodes", editor)
+  Transforms.insertNodes(editor, nodes, { at: [editor.children.length] });
+  console.log("after insertNodes")
   let path = pathRefForEmptyNodeAtCursor?.unref();
+  console.log("path", path)
   if (path) {
+    console.log("inside of if 2")
     Transforms.removeNodes(editor, { at: path });
+    console.log("after removeNodes")
     // even though the selection is in the right place after the removeNodes
     // for some reason the editor blurs so we need to focus it again
     ReactEditor.focus(editor);
   }
+  console.log("after the end")
 }
 
 /**

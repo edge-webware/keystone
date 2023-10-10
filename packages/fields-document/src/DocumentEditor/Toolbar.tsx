@@ -110,7 +110,7 @@ export function Toolbar({
         {documentFeatures.links && linkButton}
         {documentFeatures.formatting.blockTypes.blockquote && blockquoteButton}
         {!!documentFeatures.layouts.length && <LayoutsButton layouts={documentFeatures.layouts} />}
-        {/*documentFeatures.background && <BackgroundButton /> */}
+        {documentFeatures.background && <BackgroundButton />}
         {documentFeatures.formatting.blockTypes.code && codeButton}
         {!!hasBlockItems && <InsertBlockMenu />}
       </ToolbarGroup>
