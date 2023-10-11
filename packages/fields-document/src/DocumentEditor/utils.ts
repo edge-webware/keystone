@@ -150,8 +150,8 @@ export function insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(
   }
   console.log("pathRefForEmptyNodeAtCursor", pathRefForEmptyNodeAtCursor)
   console.log(nodes, "nodes", editor)
-  Transforms.insertNodes(editor, nodes, { at: [editor.children.length] });
-  console.log("after insertNodes")
+  Transforms.insertNodes(editor, nodes);
+  console.log("after insertNodes", editor.children)
   let path = pathRefForEmptyNodeAtCursor?.unref();
   console.log("path", path)
   if (path) {

@@ -152,7 +152,7 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
     {
       type: 'background',
       backgroundSettings,
-      children: [],
+      children: [{ type: 'paragraph', children: [{ text: '' }] }],
     }
   ]);
   const backgroundEntry = Editor.above(editor, { match: x => x.type === 'background' });
