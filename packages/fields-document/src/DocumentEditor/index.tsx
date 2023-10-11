@@ -592,6 +592,7 @@ function withBlocksSchema(editor: Editor): Editor {
             childNode.type !== 'link' &&
             childNode.type !== 'relationship'
           ) {
+            console.log("this ran in inline childnode")
             handleNodeInInvalidPosition(editor, [childNode, childPath], path);
             return;
           }
@@ -615,6 +616,7 @@ function withBlocksSchema(editor: Editor): Editor {
             Editor.isBlock(editor, childNode) &&
             !info.allowedChildren.has(childNode.type)
           ) {
+            console.log("this ran in block childnode")
             handleNodeInInvalidPosition(editor, [childNode, childPath], path);
             return;
           }
@@ -639,9 +641,11 @@ function handleNodeInInvalidPosition(
   const parentNodeType = Editor.isEditor(parentNode) ? 'editor' : parentNode.type;
 
   const parentNodeInfo = editorSchema[parentNodeType];
+  console.log("parent node info", parentNodeInfo)
 
   if (!childNodeInfo || childNodeInfo.invalidPositionHandleMode === 'unwrap') {
     if (parentNodeInfo.kind === 'blocks' && parentNodeInfo.blockToWrapInlinesIn) {
+      console.log("inside of set nodes")
       Transforms.setNodes(
         editor,
         {
@@ -662,6 +666,7 @@ function handleNodeInInvalidPosition(
 
   const info = editorSchema[parentNode.type || 'editor'];
   if (info?.kind === 'blocks' && info.allowedChildren.has(nodeType)) {
+    console.log("inside of move nodes")
     if (parentPath.length === 0) {
       Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] });
     } else {
@@ -669,7 +674,9 @@ function handleNodeInInvalidPosition(
     }
     return;
   }
+  console.log("after move nodes")
   if (Editor.isEditor(parentNode)) {
+    console.log("shalom world")
     Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] });
     Transforms.unwrapNodes(editor, { at: [path[0] + 1] });
     return;

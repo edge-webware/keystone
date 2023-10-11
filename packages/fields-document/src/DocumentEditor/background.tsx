@@ -148,18 +148,47 @@ export const BackgroundContainer = ({
 
 export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: { type: string, value: string } ) => {
   console.log("inside of insert background")
-  insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(editor, [
+    // {
+    //   type: 'background',
+    //   backgroundSettings,
+    //   children: [{ type: 'paragraph', children: [{ text: '' }] }],
+    // }
+  if (!editor.selection) {
+        console.warn("Editor doesn't have a valid selection.");
+        return;
+    }
+
+    // If the selection is inside a void node, don't insert.
+    const [match] = Editor.nodes(editor, {
+        match: n => Editor.isVoid(editor, n),
+        mode: 'highest'
+    });
+    if (match) {
+        console.warn("Can't insert inside a void node.");
+        return;
+    }
+
+    
+  console.log("ran here with the new code")
+  Transforms.insertNodes(editor, [
     {
-      type: 'background',
-      backgroundSettings,
-      children: [{ type: 'paragraph', children: [{ text: '' }] }],
+      type: "background",
+      backgroundSettings: { 
+        type: 'color',
+        value: '#ffffff'
+      },
+      children: [
+        {
+          type: "paragraph",
+          children: [
+            {
+              text: ""
+            }
+          ]
+        }
+      ]
     }
   ]);
-  const backgroundEntry = Editor.above(editor, { match: x => x.type === 'background' });
-  console.log("Shalom", backgroundEntry)
-  if (backgroundEntry) {
-    Transforms.select(editor, [...backgroundEntry[1], 0]);
-  }
 };
 
 export function withBackgrounds(editor: Editor) {
@@ -174,6 +203,7 @@ export function withBackgrounds(editor: Editor) {
 
     // If the node is a background and has no children or the children aren't blocks, insert a default block
     if (node.type === 'background') {
+      console.log("hit our normalization")
       if (node.children.length === 0 || !Element.isElement(node.children[0])) {
         Transforms.insertNodes(
           editor,
@@ -200,7 +230,7 @@ export const BackgroundButton = () => {
   console.log("in button")
   const {
     editor,
-    layouts: { isSelected },
+    background: { isSelected },
   } = useToolbarState();
   return useMemo(
     () => (
@@ -216,6 +246,7 @@ export const BackgroundButton = () => {
                 });
                 return;
               }
+              console.log("Hello world")
               insertBackgroundContainer(editor, { type: 'color', value: '#ffffff' });
             }}
             {...attrs}

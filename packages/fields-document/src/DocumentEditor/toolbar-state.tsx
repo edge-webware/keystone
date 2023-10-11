@@ -43,6 +43,7 @@ export type ToolbarState = {
   // so they will be inserted to the closest valid location
   // unlike the other things here which wrap elements
   layouts: { isSelected: boolean };
+  background: { isSelected: boolean };
   dividers: { isDisabled: boolean };
   code: BasicToolbarItem;
   relationships: { isDisabled: boolean };
@@ -111,6 +112,7 @@ export const createToolbarState = (
           listTypes: { ordered: true, unordered: true },
         },
         layouts: editorDocumentFeatures.layouts,
+        background: editorDocumentFeatures.background,
         links: true,
         relationships: true,
       },
@@ -244,6 +246,7 @@ export const createToolbarState = (
       isSelected: isElementActive(editor, 'blockquote'),
     },
     layouts: { isSelected: isElementActive(editor, 'layout') },
+    background: { isSelected: isElementActive(editor, 'background') },
     links: {
       isDisabled:
         !editor.selection ||

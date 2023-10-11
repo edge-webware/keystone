@@ -66,6 +66,7 @@ export function moveChildren(
   const parentNode = Path.isPath(parent) ? Node.get(editor, parentPath) : parent[0];
   if (!(Element.isElement(parentNode) && Editor.isBlock(editor, parentNode))) return;
 
+  console.log("I ran in moving children")
   for (let i = parentNode.children.length - 1; i >= 0; i--) {
     if (shouldMoveNode(parentNode.children[i])) {
       const childPath = [...parentPath, i];
@@ -139,30 +140,21 @@ export function insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(
   nodes: Node | Node[]
 ) {
   let pathRefForEmptyNodeAtCursor: PathRef | undefined;
-  console.log("insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading")
   const entry = Editor.above(editor, {
     match: node => node.type === 'heading' || node.type === 'paragraph',
   });
-  console.log("entry", entry)
   if (entry && Node.string(entry[0]) === '') {
-    console.log("inside of if 1")
     pathRefForEmptyNodeAtCursor = Editor.pathRef(editor, entry[1]);
   }
-  console.log("pathRefForEmptyNodeAtCursor", pathRefForEmptyNodeAtCursor)
-  console.log(nodes, "nodes", editor)
+
   Transforms.insertNodes(editor, nodes);
-  console.log("after insertNodes", editor.children)
   let path = pathRefForEmptyNodeAtCursor?.unref();
-  console.log("path", path)
   if (path) {
-    console.log("inside of if 2")
     Transforms.removeNodes(editor, { at: path });
-    console.log("after removeNodes")
     // even though the selection is in the right place after the removeNodes
     // for some reason the editor blurs so we need to focus it again
     ReactEditor.focus(editor);
   }
-  console.log("after the end")
 }
 
 /**
