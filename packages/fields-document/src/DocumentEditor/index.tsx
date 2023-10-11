@@ -213,7 +213,6 @@ export function DocumentEditor({
         editor={editor}
         value={value}
         onChange={value => {
-          console.log("inside onchange")
           onChange?.(value);
           // this fixes a strange issue in Safari where the selection stays inside of the editor
           // after a blur event happens but the selection is still in the editor
@@ -290,9 +289,7 @@ export function DocumentEditorProvider({
 }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const identity = useMemo(() => Math.random().toString(36), [editor]);
-  console.log(children, editor, value, "this is something here")
-  console.log(Node.isNodeList(value), "this is the value")
-  console.log(componentBlocks, documentFeatures, relationships, "this is more info")
+
   return (
     <Slate
       // this fixes issues with Slate crashing when a fast refresh occcurs
@@ -300,17 +297,14 @@ export function DocumentEditorProvider({
       editor={editor}
       initialValue={value}
       onChange={value => {
-        console.log("on change v2")
         onChange(value);
         // this fixes a strange issue in Safari where the selection stays inside of the editor
         // after a blur event happens but the selection is still in the editor
         // so the cursor is visually in the wrong place and it inserts text backwards
         const selection = window.getSelection();
         if (selection && !ReactEditor.isFocused(editor)) {
-          console.log("first if")
           const editorNode = ReactEditor.toDOMNode(editor, editor);
           if (selection.anchorNode === editorNode) {
-            console.log("second if")
             ReactEditor.focus(editor);
           }
         }
@@ -329,7 +323,6 @@ export function DocumentEditorProvider({
 
 export function DocumentEditorEditable(props: EditableProps) {
   const editor = useSlate();
-  console.log("gotten here")
   const componentBlocks = useContext(ComponentBlockContext);
 
   const onKeyDown = useMemo(() => getKeyDownHandler(editor), [editor]);
@@ -339,7 +332,7 @@ export function DocumentEditorEditable(props: EditableProps) {
       decorate={useCallback(
         ([node, path]: NodeEntry<Node>) => {
           let decorations: Range[] = [];
-          console.log(node.children, "this is node children")
+
           if (node.type === 'component-block') {
             if (
               node.children.length === 1 &&
@@ -455,7 +448,7 @@ const blockquoteChildren = [
 
 const paragraphLike = [...blockquoteChildren, 'blockquote'] as const;
 
-const insideOfLayouts = [...paragraphLike, 'component-block'] as const;
+const insideOfLayouts = [...paragraphLike, 'component-block', 'background'] as const;
 
 function blockContainer(args: {
   allowedChildren: readonly [TypesWhichHaveNoExtraRequiredProps, ...Block['type'][]];
@@ -567,14 +560,12 @@ function withBlocksSchema(editor: Editor): Editor {
         return;
       }
       const info = editorSchema[nodeType];
-        console.log("This should really work maybe, I don't know I am not a doctor (also missed a comma)")
 
       if (
         info.kind === 'blocks' &&
         node.children.length !== 0 &&
         node.children.every(child => !(Element.isElement(child) && Editor.isBlock(editor, child)))
       ) {
-        console.log("let us check to see if this is the thing that runs for layout")
         Transforms.wrapNodes(
           editor,
           { type: info.blockToWrapInlinesIn, children: [] },
@@ -584,10 +575,8 @@ function withBlocksSchema(editor: Editor): Editor {
       }
 
       for (const [index, childNode] of node.children.entries()) {
-        console.log("o baby we are here")
         const childPath = [...path, index];
         if (info.kind === 'inlines') {
-          console.log("inlines")
           if (
             !Text.isText(childNode) &&
             !Editor.isInline(editor, childNode) &&
@@ -596,7 +585,6 @@ function withBlocksSchema(editor: Editor): Editor {
             childNode.type !== 'link' &&
             childNode.type !== 'relationship'
           ) {
-            console.log("this ran in inline childnode")
             handleNodeInInvalidPosition(editor, [childNode, childPath], path);
             return;
           }
@@ -608,7 +596,6 @@ function withBlocksSchema(editor: Editor): Editor {
             childNode.type === 'link' ||
             childNode.type === 'relationship'
           ) {
-            console.log("lets see if this runs for layout")
             Transforms.wrapNodes(
               editor,
               { type: info.blockToWrapInlinesIn, children: [] },
@@ -621,13 +608,13 @@ function withBlocksSchema(editor: Editor): Editor {
             Editor.isBlock(editor, childNode) &&
             !info.allowedChildren.has(childNode.type)
           ) {
-            console.log("this ran in block childnode")
             handleNodeInInvalidPosition(editor, [childNode, childPath], path);
             return;
           }
         }
       }
     }
+
     normalizeNode([node, path]);
   };
   return editor;
@@ -646,12 +633,9 @@ function handleNodeInInvalidPosition(
   const parentNodeType = Editor.isEditor(parentNode) ? 'editor' : parentNode.type;
 
   const parentNodeInfo = editorSchema[parentNodeType];
-  console.log("parent node info", parentNodeInfo)
-  console.log("child node info", childNodeInfo)
 
   if (!childNodeInfo || childNodeInfo.invalidPositionHandleMode === 'unwrap') {
     if (parentNodeInfo.kind === 'blocks' && parentNodeInfo.blockToWrapInlinesIn) {
-      console.log("inside of set nodes")
       Transforms.setNodes(
         editor,
         {
@@ -672,7 +656,6 @@ function handleNodeInInvalidPosition(
 
   const info = editorSchema[parentNode.type || 'editor'];
   if (info?.kind === 'blocks' && info.allowedChildren.has(nodeType)) {
-    console.log("inside of move nodes", path, parentPath)
     if (parentPath.length === 0) {
       Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] });
     } else {
@@ -680,9 +663,8 @@ function handleNodeInInvalidPosition(
     }
     return;
   }
-  console.log("after move nodes")
+
   if (Editor.isEditor(parentNode)) {
-    console.log("shalom world", path)
     Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] });
     Transforms.unwrapNodes(editor, { at: [path[0] + 1] });
     return;

@@ -66,7 +66,6 @@ export function moveChildren(
   const parentNode = Path.isPath(parent) ? Node.get(editor, parentPath) : parent[0];
   if (!(Element.isElement(parentNode) && Editor.isBlock(editor, parentNode))) return;
 
-  console.log("I ran in moving children")
   for (let i = parentNode.children.length - 1; i >= 0; i--) {
     if (shouldMoveNode(parentNode.children[i])) {
       const childPath = [...parentPath, i];

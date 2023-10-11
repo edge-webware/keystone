@@ -42,7 +42,7 @@ export const BackgroundContainer = ({
 
   const backgroundContext = useContext(BackgroundContext);
   const { dialog, trigger } = useControlledPopover(
-    { isOpen: focused && selected, onClose: () => {} },
+    { isOpen: selected, onClose: () => {} },
     { modifiers: [{ name: 'offset', options: { offset: [0, 8] } }] }
   );
   const [ backgroundSettings, setBackgroundSettings ] = useState<{ backgroundType: string, backgroundValue: string }>({ 
@@ -74,15 +74,9 @@ export const BackgroundContainer = ({
       >
         {children}
       </div>
-    </div>
-  );
-};
-
-/*
-
       {focused && selected && (
-        <InlineDialog ref={dialog.ref} {...dialog.props} css={{ padding: 0 }}>
-          <ToolbarGroup>
+        <InlineDialog ref={dialog.ref} {...dialog.props} css={{ padding: 0, display: 'flex' }}>
+          <ToolbarGroup css={{ display: "flex" }}>
             { allowEdit 
               ? (
                 <form onSubmit={event => {
@@ -116,6 +110,7 @@ export const BackgroundContainer = ({
                       variant="action"
                       onMouseDown={event => {
                         event.preventDefault();
+                        alert("This will run normal js")
                         setAllowEdit(true);
                       }}
                       {...attrs}
@@ -144,33 +139,16 @@ export const BackgroundContainer = ({
           </Tooltip>
         </InlineDialog>
       )}
+    </div>
+  );
+};
+
+/*
+
 */
 
 export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: { type: string, value: string } ) => {
-  console.log("inside of insert background")
-    // {
-    //   type: 'background',
-    //   backgroundSettings,
-    //   children: [{ type: 'paragraph', children: [{ text: '' }] }],
-    // }
-  if (!editor.selection) {
-        console.warn("Editor doesn't have a valid selection.");
-        return;
-    }
-
-    // If the selection is inside a void node, don't insert.
-    const [match] = Editor.nodes(editor, {
-        match: n => Editor.isVoid(editor, n),
-        mode: 'highest'
-    });
-    if (match) {
-        console.warn("Can't insert inside a void node.");
-        return;
-    }
-
-    
-  console.log("ran here with the new code")
-  Transforms.insertNodes(editor, [
+  insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(editor, [
     {
       type: "background",
       backgroundSettings: { 
@@ -189,14 +167,15 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
       ]
     }
   ]);
+
+  const backgroundEntry = Editor.above(editor, { match: x => x.type === 'background' });
+  if (backgroundEntry) {
+    Transforms.select(editor, [...backgroundEntry[1], 0]);
+  }
 };
 
 export function withBackgrounds(editor: Editor) {
   const { normalizeNode, isVoid } = editor;
-
-  editor.isVoid = element => {
-    return element.type === 'background' ? false : isVoid(element);
-  };
 
   editor.normalizeNode = entry => {
     const [node, path] = entry;

@@ -235,7 +235,7 @@ const componentProp: t.Type<ComponentProp> = t.recursion('ComponentProp', () =>
 type Block = Layout | OnlyChildrenElements | Heading | ComponentBlock | ComponentProp | Paragraph;
 
 const block: t.Type<Block> = t.recursion('Element', () =>
-  t.union([layoutArea, onlyChildrenElements, heading, componentBlock, componentProp, paragraph])
+  t.union([layoutArea, onlyChildrenElements, heading, componentBlock, componentProp, paragraph, backgroundContainer])
 );
 
 export type ElementFromValidation = Block | Inline;
