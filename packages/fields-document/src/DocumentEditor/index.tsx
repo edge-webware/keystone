@@ -505,7 +505,7 @@ export const editorSchema = satisfies<
   }),
   blockquote: blockContainer({
     allowedChildren: blockquoteChildren,
-    invalidPositionHandleMode: 'move',
+    invalidPositionHandleMode: 'unwrap',
   }),
   paragraph: inlineContainer({ invalidPositionHandleMode: 'unwrap' }),
   code: inlineContainer({ invalidPositionHandleMode: 'move' }),
@@ -567,12 +567,14 @@ function withBlocksSchema(editor: Editor): Editor {
         return;
       }
       const info = editorSchema[nodeType];
+        console.log("This should really work maybe, I don't know I am not a doctor (also missed a comma)")
 
       if (
         info.kind === 'blocks' &&
         node.children.length !== 0 &&
         node.children.every(child => !(Element.isElement(child) && Editor.isBlock(editor, child)))
       ) {
+        console.log("let us check to see if this is the thing that runs for layout")
         Transforms.wrapNodes(
           editor,
           { type: info.blockToWrapInlinesIn, children: [] },
@@ -582,8 +584,10 @@ function withBlocksSchema(editor: Editor): Editor {
       }
 
       for (const [index, childNode] of node.children.entries()) {
+        console.log("o baby we are here")
         const childPath = [...path, index];
         if (info.kind === 'inlines') {
+          console.log("inlines")
           if (
             !Text.isText(childNode) &&
             !Editor.isInline(editor, childNode) &&
@@ -604,6 +608,7 @@ function withBlocksSchema(editor: Editor): Editor {
             childNode.type === 'link' ||
             childNode.type === 'relationship'
           ) {
+            console.log("lets see if this runs for layout")
             Transforms.wrapNodes(
               editor,
               { type: info.blockToWrapInlinesIn, children: [] },
@@ -642,6 +647,7 @@ function handleNodeInInvalidPosition(
 
   const parentNodeInfo = editorSchema[parentNodeType];
   console.log("parent node info", parentNodeInfo)
+  console.log("child node info", childNodeInfo)
 
   if (!childNodeInfo || childNodeInfo.invalidPositionHandleMode === 'unwrap') {
     if (parentNodeInfo.kind === 'blocks' && parentNodeInfo.blockToWrapInlinesIn) {
@@ -666,7 +672,7 @@ function handleNodeInInvalidPosition(
 
   const info = editorSchema[parentNode.type || 'editor'];
   if (info?.kind === 'blocks' && info.allowedChildren.has(nodeType)) {
-    console.log("inside of move nodes")
+    console.log("inside of move nodes", path, parentPath)
     if (parentPath.length === 0) {
       Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] });
     } else {
@@ -676,7 +682,7 @@ function handleNodeInInvalidPosition(
   }
   console.log("after move nodes")
   if (Editor.isEditor(parentNode)) {
-    console.log("shalom world")
+    console.log("shalom world", path)
     Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] });
     Transforms.unwrapNodes(editor, { at: [path[0] + 1] });
     return;

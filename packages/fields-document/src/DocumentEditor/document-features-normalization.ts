@@ -88,6 +88,7 @@ export function normalizeElementBasedOnDocumentFeatures(
   }: DocumentFeaturesForNormalization,
   relationships: Relationships
 ): boolean {
+  console.log("There is something that needs to looked at here")
   if (
     (node.type === 'heading' &&
       (!formatting.headingLevels.length || !formatting.headingLevels.includes(node.level))) ||
