@@ -1,7 +1,7 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState, useRef, RefObject } from 'react';
 import { Editor, Element, Node, Transforms, Range, Point } from 'slate';
 import { ReactEditor, RenderElementProps, useFocused, useSelected } from 'slate-react';
 
@@ -35,10 +35,11 @@ export const BackgroundContainer = ({
   children,
   element,
 }: RenderElementProps & { element: { type: 'background' } }) => {
-  const { spacing } = useTheme();
+  const { colors, radii, spacing } = useTheme();
   const focused = useFocused();
   const selected = useSelected();
   const editor = useStaticEditor();
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const backgroundContext = useContext(BackgroundContext);
   const { dialog, trigger } = useControlledPopover(
@@ -65,6 +66,10 @@ export const BackgroundContainer = ({
       backgroundRepeat: 'no-repeat',
       marginTop: spacing.medium,
       marginBottom: spacing.medium,
+      border: `2px dashed ${colors.border}`,
+      borderRadius: radii.small,
+      paddingLeft: spacing.medium,
+      paddingRight: spacing.medium,
     }}
       {...attributes}
     >
@@ -77,49 +82,21 @@ export const BackgroundContainer = ({
       {focused && selected && (
         <InlineDialog ref={dialog.ref} {...dialog.props} css={{ padding: 0, display: 'flex' }}>
           <ToolbarGroup css={{ display: "flex" }}>
-            { allowEdit 
-              ? (
-                <form onSubmit={event => {
-                  event.preventDefault();
-                  setAllowEdit(false);
-                  setBackgroundSettings({ backgroundType, backgroundValue });
-                  const path = ReactEditor.findPath(editor, element);
-                  Transforms.setNodes(editor, { 
-                    type: 'background', 
-                    backgroundSettings: { type: backgroundType, value: backgroundValue } 
-                  }, { at: path });
-                }}>
-                  <select onChange={event => {
-                    setBackgroundType(event.target.value);
-                  }}>
-                    <option value="color">Color</option>
-                    <option value="image">Image</option>
-                  </select>
-                  <input type="text" placeholder={ backgroundType == "color"
-                    ? "Set Color"
-                    : "Set Image Url" } 
-                    onChange={event => {
-                      setBackgroundValue(event.target.value);
-                    }} />
-                  <button type="submit">Save</button>
-                </form>
-              ) : (
-                <Tooltip content="Edit Background" weight="subtle">
-                  {attrs => (
-                    <ToolbarButton
-                      variant="action"
-                      onMouseDown={event => {
-                        event.preventDefault();
-                        alert("This will run normal js")
-                        setAllowEdit(true);
-                      }}
-                      {...attrs}
-                    >
-                      <ToolIcon size="small" />
-                    </ToolbarButton>
-                  )}
-                </Tooltip>
-              )} 
+            <Tooltip content="Edit Background" weight="subtle">
+              {attrs => (
+                <ToolbarButton
+                  variant="action"
+                  onMouseDown={event => {
+                    event.preventDefault();
+
+                    dialogRef.current?.showModal();
+                  }}
+                  {...attrs}
+                >
+                  <ToolIcon size="small" />
+                </ToolbarButton>
+              )}
+            </Tooltip>
           </ToolbarGroup>
           <ToolbarSeparator />
           <Tooltip content="Remove" weight="subtle">
@@ -139,13 +116,72 @@ export const BackgroundContainer = ({
           </Tooltip>
         </InlineDialog>
       )}
+      <BackgroundSettingsDialog 
+        modalRef={dialogRef} 
+        editor={editor} 
+        element={element}
+        backgroundType={backgroundType}
+        backgroundValue={backgroundValue}
+        setBackgroundType={setBackgroundType}
+        setBackgroundValue={setBackgroundValue}
+      />
     </div>
   );
 };
 
-/*
+const BackgroundSettingsDialog = ({ 
+  modalRef, 
+  editor, 
+  element,
+  backgroundType,
+  backgroundValue,
+  setBackgroundType,
+  setBackgroundValue,
+}: { 
+  modalRef: RefObject<HTMLDialogElement> | null, 
+  editor: Editor, 
+  element: Element 
+  backgroundType: string,
+  backgroundValue: string,
+  setBackgroundType: (backgroundType: string) => void,
+  setBackgroundValue: (backgroundValue: string) => void
+}) => {
+  return (
+    <dialog ref={modalRef}>
+      <form onSubmit={event => {
+        event.preventDefault();
+        const path = ReactEditor.findPath(editor, element);
+        Transforms.setNodes(editor, { 
+          type: 'background', 
+          backgroundSettings: { type: backgroundType, value: backgroundValue } 
+        }, { at: path });
+        modalRef?.current?.close();
+      }}>
+        <select onChange={event => {
+          setBackgroundType(event.target.value);
+        }}>
+          <option value="color">Color</option>
+          <option value="image">Image</option>
+        </select>
+        <input type="text" autoFocus placeholder={ backgroundType == "color"
+          ? "Set Color"
+          : "Set Image Url" } 
+          value={backgroundValue}
+          onBeforeInput={(event: React.CompositionEvent<HTMLInputElement>) => {
+            event.preventDefault();
 
-*/
+            setBackgroundValue(backgroundValue + event.data);
+          }}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            console.log("This ran in on change");
+            setBackgroundValue(event.target.value);
+          }}
+          />
+        <button type="submit">Save</button>
+      </form>
+    </dialog>
+  );
+}
 
 export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: { type: string, value: string } ) => {
   insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading(editor, [
