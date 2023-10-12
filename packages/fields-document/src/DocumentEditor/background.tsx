@@ -2,6 +2,7 @@
 /** @jsx jsx */
 
 import { createContext, useContext, useMemo, useState, useRef, RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { Editor, Element, Node, Transforms, Range, Point } from 'slate';
 import { ReactEditor, RenderElementProps, useFocused, useSelected } from 'slate-react';
 
@@ -13,6 +14,7 @@ import { ImageIcon } from '@keystone-ui/icons/icons/ImageIcon';
 
 import { useControlledPopover } from '@keystone-ui/popover';
 import { DocumentFeatures } from '../views';
+import { DialogBase } from '@keystone-ui/modals/src/DialogBase';
 import { InlineDialog, ToolbarButton, ToolbarGroup, ToolbarSeparator } from './primitives';
 import { paragraphElement } from './paragraphs';
 import {
@@ -116,15 +118,20 @@ export const BackgroundContainer = ({
           </Tooltip>
         </InlineDialog>
       )}
-      <BackgroundSettingsDialog 
-        modalRef={dialogRef} 
-        editor={editor} 
-        element={element}
-        backgroundType={backgroundType}
-        backgroundValue={backgroundValue}
-        setBackgroundType={setBackgroundType}
-        setBackgroundValue={setBackgroundValue}
-      />
+      {
+        createPortal(
+          <BackgroundSettingsDialog 
+            modalRef={dialogRef} 
+            editor={editor} 
+            element={element}
+            backgroundType={backgroundType}
+            backgroundValue={backgroundValue}
+            setBackgroundType={setBackgroundType}
+            setBackgroundValue={setBackgroundValue}
+          />,
+          document.body
+        )
+      }
     </div>
   );
 };
@@ -157,7 +164,7 @@ const BackgroundSettingsDialog = ({
         }, { at: path });
         modalRef?.current?.close();
       }}>
-        <select onChange={event => {
+        <select onChange={(event) => {
           setBackgroundType(event.target.value);
         }}>
           <option value="color">Color</option>
@@ -167,16 +174,19 @@ const BackgroundSettingsDialog = ({
           ? "Set Color"
           : "Set Image Url" } 
           value={backgroundValue}
+          onKeyDown={(event) => {
+            console.log("keydown", event)
+            if ( event.key === "Backspace" ) {
+              setBackgroundValue(backgroundValue.slice(0, -1));
+            }
+          }}
           onBeforeInput={(event: React.CompositionEvent<HTMLInputElement>) => {
             event.preventDefault();
+            console.log("this ran in before input", event)
 
             setBackgroundValue(backgroundValue + event.data);
           }}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            console.log("This ran in on change");
-            setBackgroundValue(event.target.value);
-          }}
-          />
+        />
         <button type="submit">Save</button>
       </form>
     </dialog>
