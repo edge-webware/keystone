@@ -35,6 +35,8 @@ type Background = {
   backgroundSettings: {
     type: string;
     value: string;
+    contrast: string;
+    fixed: boolean;
   };
 }
 

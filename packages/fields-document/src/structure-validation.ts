@@ -81,6 +81,8 @@ type Background = {
   backgroundSettings: {
     type: string;
     value: string;
+    contrast: string;
+    fixed: boolean;
   }
   children: Children;
 }
@@ -92,6 +94,8 @@ const backgroundContainer: t.Type<Background> = t.recursion('BackgroundContainer
       backgroundSettings: t.type({
         type: t.string,
         value: t.string,
+        contrast: t.string,
+        fixed: t.boolean,
       }),
       children,
     })

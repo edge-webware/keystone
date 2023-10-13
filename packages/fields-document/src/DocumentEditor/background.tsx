@@ -1,9 +1,9 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 
-import { createContext, useContext, useMemo, useState, useRef, RefObject } from 'react';
+import { useMemo, useState, useRef, RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { Editor, Element, Node, Transforms, Range, Point } from 'slate';
+import { Editor, Element, Transforms } from 'slate';
 import { ReactEditor, RenderElementProps, useFocused, useSelected } from 'slate-react';
 
 import { jsx, useTheme } from '@keystone-ui/core';
@@ -13,24 +13,15 @@ import { ToolIcon } from '@keystone-ui/icons/icons/ToolIcon';
 import { ImageIcon } from '@keystone-ui/icons/icons/ImageIcon';
 
 import { useControlledPopover } from '@keystone-ui/popover';
-import { DocumentFeatures } from '../views';
-import { DialogBase } from '@keystone-ui/modals/src/DialogBase';
 import { InlineDialog, ToolbarButton, ToolbarGroup, ToolbarSeparator } from './primitives';
-import { paragraphElement } from './paragraphs';
 import {
   insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading,
   isElementActive,
-  moveChildren,
   useStaticEditor,
 } from './utils';
 import { useToolbarState } from './toolbar-state';
-
-const BackgroundContext = createContext<{ backgroundType: string, backgroundValue: string }>({ 
-  backgroundType: 'color',
-  backgroundValue: '#ffffff'
-});
-
-export const BackgroundProvider = BackgroundContext.Provider;
+import { useKeystone } from '@keystone-6/core/admin-ui/context';
+import { RelationshipSelect } from '@keystone-6/core/fields/types/relationship/views/RelationshipSelect';
 
 export const BackgroundContainer = ({
   attributes,
@@ -43,20 +34,20 @@ export const BackgroundContainer = ({
   const editor = useStaticEditor();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const backgroundContext = useContext(BackgroundContext);
   const { dialog, trigger } = useControlledPopover(
     { isOpen: selected, onClose: () => {} },
-    { modifiers: [{ name: 'offset', options: { offset: [0, 8] } }] }
+    { modifiers: [{ name: 'offset', options: { offset: [0, 2] } }] }
   );
-  const [ backgroundSettings, setBackgroundSettings ] = useState<{ backgroundType: string, backgroundValue: string }>({ 
-    backgroundType: 'color',
-    backgroundValue: '#ffffff'
-  });
-  const [ allowEdit, setAllowEdit ] = useState<boolean>(false);
-  const [ backgroundType, setBackgroundType ] = useState<string>(backgroundContext.backgroundType);
-  const [ backgroundValue, setBackgroundValue ] = useState<string>(backgroundContext.backgroundValue);
-
-  console.log("This is insider the container")
+  const defaultBackgroundSettings: { type: string, value: string, contrast: string, fixed: boolean } = { 
+    type: 'color',
+    value: '#ffffff',
+    contrast: 'light',
+    fixed: false,
+  };
+  const [ backgroundType, setBackgroundType ] = useState<string>(element.backgroundSettings?.type || defaultBackgroundSettings.type);
+  const [ backgroundValue, setBackgroundValue ] = useState<string>(element.backgroundSettings?.value || defaultBackgroundSettings.value);
+  const [ backgroundContrast, setBackgroundContrast ] = useState<string>(element.backgroundSettings?.contrast || defaultBackgroundSettings.contrast);
+  const [ backgroundFixed, setBackgroundFixed ] = useState<boolean>(element.backgroundSettings?.fixed || defaultBackgroundSettings.fixed);
 
   return (
     <div css={{
@@ -126,8 +117,12 @@ export const BackgroundContainer = ({
             element={element}
             backgroundType={backgroundType}
             backgroundValue={backgroundValue}
+            backgroundContrast={backgroundContrast}
+            backgroundFixed={backgroundFixed}
             setBackgroundType={setBackgroundType}
             setBackgroundValue={setBackgroundValue}
+            setBackgroundContrast={setBackgroundContrast}
+            setBackgroundFixed={setBackgroundFixed}
           />,
           document.body
         )
@@ -142,51 +137,131 @@ const BackgroundSettingsDialog = ({
   element,
   backgroundType,
   backgroundValue,
+  backgroundContrast,
+  backgroundFixed,
   setBackgroundType,
   setBackgroundValue,
+  setBackgroundContrast,
+  setBackgroundFixed,
 }: { 
   modalRef: RefObject<HTMLDialogElement> | null, 
   editor: Editor, 
   element: Element 
   backgroundType: string,
   backgroundValue: string,
+  backgroundContrast: string,
+  backgroundFixed: boolean,
   setBackgroundType: (backgroundType: string) => void,
-  setBackgroundValue: (backgroundValue: string) => void
+  setBackgroundValue: (backgroundValue: string) => void,
+  setBackgroundContrast: (backgroundContrast: string) => void
+  setBackgroundFixed: (backgroundFixed: boolean) => void
 }) => {
+  const keystone = useKeystone();
+  const list = keystone.adminMeta.lists["Image"];
+  let searchFields: string[] = [];
+  if ( list ) {
+    searchFields = Object.keys(list.fields).filter(key => list.fields[key].search);
+  }
+  const handleTypeChange = (value: string) => {
+    setBackgroundValue('');
+    setBackgroundType(value);
+  }
+
   return (
-    <dialog ref={modalRef}>
+    <dialog ref={modalRef}
+      css={{
+        width: '100%',
+        maxWidth: 400,
+        height: "12rem",
+        overflow: "scroll"
+      }}
+    >
       <form onSubmit={event => {
         event.preventDefault();
         const path = ReactEditor.findPath(editor, element);
         Transforms.setNodes(editor, { 
           type: 'background', 
-          backgroundSettings: { type: backgroundType, value: backgroundValue } 
+          backgroundSettings: { type: backgroundType, value: backgroundValue, contrast: backgroundContrast, fixed: backgroundFixed } 
         }, { at: path });
         modalRef?.current?.close();
-      }}>
-        <select onChange={(event) => {
-          setBackgroundType(event.target.value);
-        }}>
-          <option value="color">Color</option>
-          <option value="image">Image</option>
-        </select>
-        <input type="text" autoFocus placeholder={ backgroundType == "color"
-          ? "Set Color"
-          : "Set Image Url" } 
-          value={backgroundValue}
-          onKeyDown={(event) => {
-            console.log("keydown", event)
-            if ( event.key === "Backspace" ) {
-              setBackgroundValue(backgroundValue.slice(0, -1));
-            }
+      }}
+        css={{
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div>
+          <select value={backgroundType} onChange={(event) => {
+            handleTypeChange(event.target.value);
           }}
-          onBeforeInput={(event: React.CompositionEvent<HTMLInputElement>) => {
-            event.preventDefault();
-            console.log("this ran in before input", event)
-
-            setBackgroundValue(backgroundValue + event.data);
-          }}
-        />
+            css={{
+              marginRight: 8,
+            }}
+          >
+            <option value="color">Color</option>
+            <option value="image">Image</option>
+          </select>
+          <select value={backgroundContrast} onChange={(event) => {
+            setBackgroundContrast(event.target.value);
+          }}>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          {
+            backgroundType === "image" && (
+              <label css={{
+                marginLeft: 8,
+                marginRight: 8,
+              }}>
+                <input type="checkbox" checked={backgroundFixed} onChange={(event) => {
+                  setBackgroundFixed(event.target.checked);
+                }} />
+                Fixed
+              </label>
+            )
+          }
+        </div>
+        {backgroundType === "image" && list ? (
+          <div css={{
+            marginTop: 8,
+            marginBottom: 8,
+            zIndex: 1000,
+          }}>
+            <RelationshipSelect
+              controlShouldRenderValue
+              isDisabled={false}
+              list={list}
+              labelField={list.labelField}
+              searchFields={searchFields}
+              state={{
+                kind: 'one',
+                value: handleSelectValueOrNull(backgroundValue), 
+                onChange(value) {
+                  setBackgroundValue(JSON.stringify(value))
+                },
+              }}
+            />
+          </div>
+        ) : (
+            <input 
+              type="text" 
+              autoFocus 
+              placeholder={ backgroundType == "color"
+                ? "Set Color"
+                : "Set Image Url" } 
+              value={backgroundValue}
+              onChange={(event) => {
+                setBackgroundValue(event.target.value);
+              }}
+              css={{
+                marginTop: 8,
+                marginBottom: 8,
+                padding: 8,
+                border: '1px solid #ccc',
+                borderRadius: 4,
+              }}
+            />
+        )}
         <button type="submit">Save</button>
       </form>
     </dialog>
@@ -199,7 +274,9 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
       type: "background",
       backgroundSettings: { 
         type: 'color',
-        value: '#ffffff'
+        value: '#ffffff',
+        contrast: 'light',
+        fixed: false,
       },
       children: [
         {
@@ -221,14 +298,13 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
 };
 
 export function withBackgrounds(editor: Editor) {
-  const { normalizeNode, isVoid } = editor;
+  const { normalizeNode } = editor;
 
   editor.normalizeNode = entry => {
     const [node, path] = entry;
 
     // If the node is a background and has no children or the children aren't blocks, insert a default block
     if (node.type === 'background') {
-      console.log("hit our normalization")
       if (node.children.length === 0 || !Element.isElement(node.children[0])) {
         Transforms.insertNodes(
           editor,
@@ -252,7 +328,6 @@ export function withBackgrounds(editor: Editor) {
 const backgroundIcon = <ImageIcon size="small" />;
 
 export const BackgroundButton = () => {
-  console.log("in button")
   const {
     editor,
     background: { isSelected },
@@ -271,7 +346,6 @@ export const BackgroundButton = () => {
                 });
                 return;
               }
-              console.log("Hello world")
               insertBackgroundContainer(editor, { type: 'color', value: '#ffffff' });
             }}
             {...attrs}
@@ -284,3 +358,14 @@ export const BackgroundButton = () => {
     [editor, isSelected]
   );
 };
+
+/*
+ * UTILS
+ */
+const handleSelectValueOrNull = (value: string) => {
+  try {
+    return JSON.parse(value);
+  } catch (_) {
+    return null;
+  }
+}

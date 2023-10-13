@@ -196,9 +196,6 @@ export function DocumentEditor({
     [documentFeatures, componentBlocks, relationships]
   );
 
-  console.log(editor, "insider the document editor")
-  console.log(editor, "after")
-  console.log(value, "this is a value that I jsut added")
   return (
     <div
       css={{

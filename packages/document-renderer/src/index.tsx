@@ -48,6 +48,7 @@ interface Renderers {
       children: ReactNode;
       textAlign: 'center' | 'end' | undefined;
     }>;
+    background: Component<{ backgroundSettings: { type: string, value: string, contrast: string, fixed: boolean }, children: ReactElement[] }>;
     list: Component<{ type: 'ordered' | 'unordered'; children: ReactElement[] }>;
   };
 }
@@ -88,6 +89,19 @@ export const defaultRenderers: Renderers = {
           ))}
         </List>
       );
+    },
+    background: ({ children, backgroundSettings }) => {
+      const { type, value, contrast } = backgroundSettings;
+      const style = {
+        backgroundColor: type === 'color' ? value : undefined,
+        color: contrast ? "black" : "white",
+      };
+
+      return (
+        <div style={style}> 
+          {children}
+        </div>
+      )
     },
     layout: ({ children, layout }) => {
       return (
@@ -150,6 +164,9 @@ function DocumentNode({
     }
     case 'layout': {
       return <renderers.block.layout layout={node.layout as any} children={children} />;
+    }
+    case 'background': {
+      return <renderers.block.background backgroundSettings={node.backgroundSettings as any} children={children} />;
     }
     case 'divider': {
       return <renderers.block.divider />;
