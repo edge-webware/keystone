@@ -23,6 +23,16 @@ import { useToolbarState } from './toolbar-state';
 import { useKeystone } from '@keystone-6/core/admin-ui/context';
 import { RelationshipSelect } from '@keystone-6/core/fields/types/relationship/views/RelationshipSelect';
 
+export type BackgroundOptions = {
+  type: string,
+  value: string,
+  contrast: string,
+  imageSettings: {
+    fixed: boolean,
+    repeating: boolean,
+  } | null,
+}
+
 export const BackgroundContainer = ({
   attributes,
   children,
@@ -38,16 +48,20 @@ export const BackgroundContainer = ({
     { isOpen: selected, onClose: () => {} },
     { modifiers: [{ name: 'offset', options: { offset: [0, 2] } }] }
   );
-  const defaultBackgroundSettings: { type: string, value: string, contrast: string, fixed: boolean } = { 
+  const defaultBackgroundSettings: BackgroundOptions = { 
     type: 'color',
     value: '#ffffff',
     contrast: 'light',
-    fixed: false,
+    imageSettings: {
+      fixed: false,
+      repeating: false,
+    },
   };
   const [ backgroundType, setBackgroundType ] = useState<string>(element.backgroundSettings?.type || defaultBackgroundSettings.type);
   const [ backgroundValue, setBackgroundValue ] = useState<string>(element.backgroundSettings?.value || defaultBackgroundSettings.value);
   const [ backgroundContrast, setBackgroundContrast ] = useState<string>(element.backgroundSettings?.contrast || defaultBackgroundSettings.contrast);
-  const [ backgroundFixed, setBackgroundFixed ] = useState<boolean>(element.backgroundSettings?.fixed || defaultBackgroundSettings.fixed);
+  const [ imageSettings, setImageSettings ] = useState<{ fixed: boolean, repeating: boolean }>(element.backgroundSettings.imageSettings || defaultBackgroundSettings.imageSettings);
+
 
   return (
     <div css={{
@@ -118,11 +132,11 @@ export const BackgroundContainer = ({
             backgroundType={backgroundType}
             backgroundValue={backgroundValue}
             backgroundContrast={backgroundContrast}
-            backgroundFixed={backgroundFixed}
+            imageSettings={imageSettings}
             setBackgroundType={setBackgroundType}
             setBackgroundValue={setBackgroundValue}
             setBackgroundContrast={setBackgroundContrast}
-            setBackgroundFixed={setBackgroundFixed}
+            setImageSettings={setImageSettings}
           />,
           document.body
         )
@@ -138,11 +152,11 @@ const BackgroundSettingsDialog = ({
   backgroundType,
   backgroundValue,
   backgroundContrast,
-  backgroundFixed,
+  imageSettings,
   setBackgroundType,
   setBackgroundValue,
   setBackgroundContrast,
-  setBackgroundFixed,
+  setImageSettings,
 }: { 
   modalRef: RefObject<HTMLDialogElement> | null, 
   editor: Editor, 
@@ -150,11 +164,11 @@ const BackgroundSettingsDialog = ({
   backgroundType: string,
   backgroundValue: string,
   backgroundContrast: string,
-  backgroundFixed: boolean,
+  imageSettings: { fixed: boolean, repeating: boolean },
   setBackgroundType: (backgroundType: string) => void,
   setBackgroundValue: (backgroundValue: string) => void,
   setBackgroundContrast: (backgroundContrast: string) => void
-  setBackgroundFixed: (backgroundFixed: boolean) => void
+  setImageSettings: (imageSettings: { fixed: boolean, repeating: boolean }) => void
 }) => {
   const keystone = useKeystone();
   const list = keystone.adminMeta.lists["Image"];
@@ -181,7 +195,7 @@ const BackgroundSettingsDialog = ({
         const path = ReactEditor.findPath(editor, element);
         Transforms.setNodes(editor, { 
           type: 'background', 
-          backgroundSettings: { type: backgroundType, value: backgroundValue, contrast: backgroundContrast, fixed: backgroundFixed } 
+          backgroundSettings: { type: backgroundType, value: backgroundValue, contrast: backgroundContrast, imageSettings: imageSettings } 
         }, { at: path });
         modalRef?.current?.close();
       }}
@@ -202,6 +216,13 @@ const BackgroundSettingsDialog = ({
             <option value="image">Image</option>
           </select>
           <select value={backgroundContrast} onChange={(event) => {
+            if (event.target.value === "image") {
+              setImageSettings({
+                fixed: imageSettings?.fixed || false,
+                repeating: imageSettings?.repeating || false,
+              })
+            }
+
             setBackgroundContrast(event.target.value);
           }}>
             <option value="light">Light</option>
@@ -213,10 +234,29 @@ const BackgroundSettingsDialog = ({
                 marginLeft: 8,
                 marginRight: 8,
               }}>
-                <input type="checkbox" checked={backgroundFixed} onChange={(event) => {
-                  setBackgroundFixed(event.target.checked);
+                <input type="checkbox" checked={imageSettings?.fixed} onChange={(event) => {
+                  setImageSettings({
+                    repeating: imageSettings?.repeating || false,
+                    fixed: event.target.checked,
+                  })
                 }} />
                 Fixed
+              </label>
+            )
+          }
+          {
+            backgroundType === "image" && (
+              <label css={{
+                marginLeft: 8,
+                marginRight: 8,
+              }}>
+                <input type="checkbox" checked={imageSettings?.repeating} onChange={(event) => {
+                  setImageSettings({
+                    fixed: imageSettings?.fixed || false,
+                    repeating: event.target.checked,
+                  })
+                }} />
+                Repeat Background 
               </label>
             )
           }
@@ -276,7 +316,10 @@ export const insertBackgroundContainer = ( editor: Editor, backgroundSettings: {
         type: 'color',
         value: '#ffffff',
         contrast: 'light',
-        fixed: false,
+        imageSettings: {
+          fixed: false,
+          repeating: false,
+        }, 
       },
       children: [
         {

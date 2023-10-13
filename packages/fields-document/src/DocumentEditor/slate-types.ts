@@ -36,7 +36,10 @@ type Background = {
     type: string;
     value: string;
     contrast: string;
-    fixed: boolean;
+    imageSettings: {
+      fixed: boolean;
+      repeating: boolean;
+    };
   };
 }
 

@@ -48,7 +48,7 @@ interface Renderers {
       children: ReactNode;
       textAlign: 'center' | 'end' | undefined;
     }>;
-    background: Component<{ backgroundSettings: { type: string, value: string, contrast: string, fixed: boolean }, children: ReactElement[] }>;
+    background: Component<{ backgroundSettings: { type: string, value: string, contrast: string, imageSettings: { fixed: boolean, repeating: boolean } | null }, children: ReactElement[] }>;
     list: Component<{ type: 'ordered' | 'unordered'; children: ReactElement[] }>;
   };
 }
@@ -98,7 +98,7 @@ export const defaultRenderers: Renderers = {
       };
 
       return (
-        <div style={style}> 
+        <div style={style} className="background"> 
           {children}
         </div>
       )
@@ -145,6 +145,7 @@ function DocumentNode({
   const children = node.children.map((x, i) => (
     <DocumentNode node={x} componentBlocks={componentBlocks} renderers={renderers} key={i} />
   ));
+
   switch (node.type as string) {
     case 'blockquote': {
       return <renderers.block.blockquote children={children} />;
@@ -253,6 +254,7 @@ export function DocumentRenderer<ComponentBlocks extends Record<string, Componen
     block: { ...defaultRenderers.block, ...props.renderers?.block },
   };
   const componentBlocks = props.componentBlocks || {};
+
   return (
     <Fragment>
       {props.document.map((x, i) => (
