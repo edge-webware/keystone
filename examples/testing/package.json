@@ -8,11 +8,11 @@
     "start": "keystone start",
     "build": "keystone build",
     "postinstall": "keystone postinstall",
-    "test": "node --loader tsx example-test.ts"
+    "test": "node --import tsx --test example-test.ts"
   },
   "dependencies": {
     "@keystone-6/auth": "^7.0.0",
-    "@keystone-6/core": "^5.0.0",
+    "@keystone-6/core": "^5.7.0",
     "@prisma/client": "^4.16.2"
   },
   "devDependencies": {

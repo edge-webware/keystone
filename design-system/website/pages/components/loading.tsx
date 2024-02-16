@@ -1,14 +1,14 @@
 /** @jsxRuntime classic */
 /** @jsx jsx */
 
-import { Fragment } from 'react';
-import { jsx, Box, Stack } from '@keystone-ui/core';
-import { LoadingDots, loadingToneValues } from '@keystone-ui/loading';
+import { Fragment } from 'react'
+import { jsx, Box, Stack } from '@keystone-ui/core'
+import { LoadingDots, loadingToneValues } from '@keystone-ui/loading'
 
-import { Page } from '../../components/Page';
-import { toLabel } from '../../utils';
+import { Page } from '../../components/Page'
+import { capitalise } from '../../utils'
 
-export default function LoadingPage() {
+export default function LoadingPage () {
   return (
     <Page>
       <h1>Notice</h1>
@@ -19,19 +19,19 @@ export default function LoadingPage() {
           <h3>{tone}</h3>
           <Stack across gap="large">
             <LoadingDots
-              label={`${toLabel(tone)} is loading`}
+              label={`${capitalise(tone)} is loading`}
               key={tone}
               tone={tone}
               size="large"
             />
             <LoadingDots
-              label={`${toLabel(tone)} is loading`}
+              label={`${capitalise(tone)} is loading`}
               key={tone}
               tone={tone}
               size="medium"
             />
             <LoadingDots
-              label={`${toLabel(tone)} is loading`}
+              label={`${capitalise(tone)} is loading`}
               key={tone}
               tone={tone}
               size="small"
@@ -46,5 +46,5 @@ export default function LoadingPage() {
         <LoadingDots label={`Loading current color`} size="medium" />
       </Box>
     </Page>
-  );
+  )
 }

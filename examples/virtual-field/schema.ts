@@ -1,9 +1,10 @@
-import { list, graphql } from '@keystone-6/core';
-import { text, checkbox, virtual } from '@keystone-6/core/fields';
-import { allowAll } from '@keystone-6/core/access';
-import type { Lists } from '.keystone/types';
+import { list, graphql } from '@keystone-6/core'
+import { text, checkbox, virtual } from '@keystone-6/core/fields'
+import { allowAll } from '@keystone-6/core/access'
 
-export const lists: Lists = {
+import type { Lists } from '.keystone/types'
+
+export const lists = {
   Post: list({
     access: allowAll, // WARNING: public
     fields: {
@@ -15,8 +16,8 @@ export const lists: Lists = {
       isActive: virtual({
         field: graphql.field({
           type: graphql.Boolean,
-          resolve(item) {
-            return item.title.length > 3 && item.content.length > 10 && item.listed === true;
+          resolve (item) {
+            return item.title.length > 3 && item.content.length > 10 && item.listed === true
           },
         }),
       }),
@@ -25,9 +26,9 @@ export const lists: Lists = {
       counts: virtual({
         field: graphql.field({
           type: graphql.object<{
-            words: number;
-            sentences: number;
-            paragraphs: number;
+            words: number
+            sentences: number
+            paragraphs: number
           }>()({
             name: 'PostCounts',
             fields: {
@@ -36,13 +37,13 @@ export const lists: Lists = {
               paragraphs: graphql.field({ type: graphql.Int }),
             },
           }),
-          resolve(item) {
-            const content = item.content ?? '';
+          resolve (item) {
+            const content = item.content ?? ''
             return {
               words: content.split(' ').length,
               sentences: content.split('.').length,
               paragraphs: content.split('\n\n').length,
-            };
+            }
           },
         }),
         ui: {
@@ -58,10 +59,10 @@ export const lists: Lists = {
           args: {
             length: graphql.arg({ type: graphql.nonNull(graphql.Int), defaultValue: 50 }),
           },
-          resolve(item, { length }) {
-            const { content = '' } = item;
-            if (content.length <= length) return content;
-            return content.slice(0, length) + '...';
+          resolve (item, { length }) {
+            const { content = '' } = item
+            if (content.length <= length) return content
+            return content.slice(0, length) + '...'
           },
         }),
         ui: { query: '(length: 10)' },
@@ -72,8 +73,8 @@ export const lists: Lists = {
         field: graphql.field({
           type: graphql.list(
             graphql.object<{
-              id: string;
-              title: string;
+              id: string
+              title: string
             }>()({
               name: 'RelatedPosts',
               fields: {
@@ -83,7 +84,7 @@ export const lists: Lists = {
             })
           ),
 
-          async resolve(item, _, context) {
+          async resolve (item, _, context) {
             // TODO: this could probably be better
             const posts = await context.db.Post.findMany({
               where: {
@@ -94,16 +95,16 @@ export const lists: Lists = {
                 },
               },
               take: 10,
-            });
+            })
 
             return posts.map(post => ({
               id: post.id,
               title: post.title,
-            }));
+            }))
           },
         }),
         ui: { query: '{ id, title }' },
       }),
     },
   }),
-};
+} satisfies Lists

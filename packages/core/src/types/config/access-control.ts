@@ -1,102 +1,105 @@
-import type { MaybePromise } from '../utils';
-import type { KeystoneContext } from '../context';
-import type { BaseListTypeInfo } from '../type-info';
+import type { MaybePromise } from '../utils'
+import type { KeystoneContext } from '../context'
+import type { BaseListTypeInfo } from '../type-info'
 
 export type BaseAccessArgs<ListTypeInfo extends BaseListTypeInfo> = {
-  context: KeystoneContext<ListTypeInfo['all']>;
-  session?: ListTypeInfo['all']['session'];
-  listKey: ListTypeInfo['key'];
-};
+  context: KeystoneContext<ListTypeInfo['all']>
+  session?: ListTypeInfo['all']['session']
+  listKey: ListTypeInfo['key']
+}
 
-export type AccessOperation = 'create' | 'query' | 'update' | 'delete';
-export type FilterOperation = 'query' | 'update' | 'delete';
-export type ItemOperation = 'create' | 'update' | 'delete';
+export type AccessOperation = 'create' | 'query' | 'update' | 'delete'
+export type FilterOperation = 'query' | 'update' | 'delete'
+export type ItemOperation = 'create' | 'update' | 'delete'
 
 export type ListOperationAccessControl<
   Operation extends AccessOperation,
   ListTypeInfo extends BaseListTypeInfo
-> = (args: BaseAccessArgs<ListTypeInfo> & { operation: Operation }) => MaybePromise<boolean>;
+> = (args: BaseAccessArgs<ListTypeInfo> & { operation: Operation }) => MaybePromise<boolean>
 
 export type ListFilterAccessControl<
   Operation extends FilterOperation,
   ListTypeInfo extends BaseListTypeInfo
 > = (
   args: BaseAccessArgs<ListTypeInfo> & { operation: Operation }
-) => MaybePromise<boolean | ListTypeInfo['inputs']['where']>;
+) => MaybePromise<boolean | ListTypeInfo['inputs']['where']>
 
-export type CreateListItemAccessControl<ListTypeInfo extends BaseListTypeInfo> = (
+export type ListItemAccessControl<
+  Operation extends ItemOperation,
+  ListTypeInfo extends BaseListTypeInfo
+> = (
   args: BaseAccessArgs<ListTypeInfo> & {
-    operation: 'create';
+    create: {
+      operation: 'create'
 
-    /**
-     * The input passed in from the GraphQL API
-     */
-    inputData: ListTypeInfo['inputs']['create'];
-  }
-) => MaybePromise<boolean>;
+      /**
+      * The input passed in from the GraphQL API
+      */
+      inputData: ListTypeInfo['inputs']['create']
+    }
+    update: {
+      operation: 'update'
 
-export type UpdateListItemAccessControl<ListTypeInfo extends BaseListTypeInfo> = (
-  args: BaseAccessArgs<ListTypeInfo> & {
-    operation: 'update';
+      /**
+      * The input passed in from the GraphQL API
+      */
+      inputData: ListTypeInfo['inputs']['update']
 
-    /**
-     * The item being updated
-     */
-    item: ListTypeInfo['item'];
+      /**
+      * The item being updated
+      */
+      item: ListTypeInfo['item']
+    }
+    delete: {
+      operation: 'delete'
 
-    /**
-     * The input passed in from the GraphQL API
-     */
-    inputData: ListTypeInfo['inputs']['update'];
-  }
-) => MaybePromise<boolean>;
+      /**
+      * The item being deleted
+      */
+      item: ListTypeInfo['item']
+    }
+  }[Operation]
+) => MaybePromise<boolean>
 
-export type DeleteListItemAccessControl<ListTypeInfo extends BaseListTypeInfo> = (
-  args: BaseAccessArgs<ListTypeInfo> & {
-    operation: 'delete';
-
-    /**
-     * The item being deleted
-     */
-    item: ListTypeInfo['item'];
-  }
-) => MaybePromise<boolean>;
+export type CreateListItemAccessControl<ListTypeInfo extends BaseListTypeInfo> = ListItemAccessControl<'create', ListTypeInfo>
+export type UpdateListItemAccessControl<ListTypeInfo extends BaseListTypeInfo> = ListItemAccessControl<'update', ListTypeInfo>
+export type DeleteListItemAccessControl<ListTypeInfo extends BaseListTypeInfo> = ListItemAccessControl<'delete', ListTypeInfo>
 
 type ListAccessControlFunction<ListTypeInfo extends BaseListTypeInfo> = (
   args: BaseAccessArgs<ListTypeInfo> & { operation: AccessOperation }
-) => MaybePromise<boolean>;
+) => MaybePromise<boolean>
 
 type ListAccessControlObject<ListTypeInfo extends BaseListTypeInfo> = {
   // these functions should return `true` if access is allowed or `false` if access is denied.
   operation:
     | ListOperationAccessControl<AccessOperation, ListTypeInfo>
     | {
-        query: ListOperationAccessControl<'query', ListTypeInfo>;
-        create: ListOperationAccessControl<'create', ListTypeInfo>;
-        update: ListOperationAccessControl<'update', ListTypeInfo>;
-        delete: ListOperationAccessControl<'delete', ListTypeInfo>;
-      };
+        query: ListOperationAccessControl<'query', ListTypeInfo>
+        create: ListOperationAccessControl<'create', ListTypeInfo>
+        update: ListOperationAccessControl<'update', ListTypeInfo>
+        delete: ListOperationAccessControl<'delete', ListTypeInfo>
+      }
 
   // The 'filter' rules can return either:
   // - a filter. In this case, the operation can proceed, but the filter will be additionally applied when updating/reading/deleting
   //   which may make it appear that some of the items don't exist.
   // - boolean true/false. If false, treated as a filter that never matches.
   filter?: {
-    query?: ListFilterAccessControl<'query', ListTypeInfo>;
+    query?: ListFilterAccessControl<'query', ListTypeInfo>
     // create?: not supported
-    update?: ListFilterAccessControl<'update', ListTypeInfo>;
-    delete?: ListFilterAccessControl<'delete', ListTypeInfo>;
-  };
+    update?: ListFilterAccessControl<'update', ListTypeInfo>
+    delete?: ListFilterAccessControl<'delete', ListTypeInfo>
+  }
 
   // These rules are applied to each item being operated on individually. They return `true` or `false`,
   // and if false, an access denied error will be returned for the individual operation.
   item?: {
-    // read?: not supported
-    create?: CreateListItemAccessControl<ListTypeInfo>;
-    update?: UpdateListItemAccessControl<ListTypeInfo>;
-    delete?: DeleteListItemAccessControl<ListTypeInfo>;
-  };
-};
+    // read?: not supported // TODO: why not
+    create?: ListItemAccessControl<'create', ListTypeInfo>
+    update?: ListItemAccessControl<'update', ListTypeInfo>
+    delete?: ListItemAccessControl<'delete', ListTypeInfo>
+  }
+}
 
 // List level access control lets you set permissions on the autogenerated CRUD API for each list.
 //
@@ -118,44 +121,44 @@ type ListAccessControlObject<ListTypeInfo extends BaseListTypeInfo> = {
 //
 export type ListAccessControl<ListTypeInfo extends BaseListTypeInfo> =
   | ListAccessControlFunction<ListTypeInfo>
-  | ListAccessControlObject<ListTypeInfo>;
+  | ListAccessControlObject<ListTypeInfo>
 
 // Field Access
-export type IndividualFieldAccessControl<Args> = (args: Args) => MaybePromise<boolean>;
+export type IndividualFieldAccessControl<Args> = (args: Args) => MaybePromise<boolean>
 
 export type FieldCreateItemAccessArgs<ListTypeInfo extends BaseListTypeInfo> =
   BaseAccessArgs<ListTypeInfo> & {
-    operation: 'create';
-    fieldKey: string;
+    operation: 'create'
+    fieldKey: string
     /**
      * The input passed in from the GraphQL API
      */
-    inputData: ListTypeInfo['inputs']['create'];
-  };
+    inputData: ListTypeInfo['inputs']['create']
+  }
 
 export type FieldReadItemAccessArgs<ListTypeInfo extends BaseListTypeInfo> =
   BaseAccessArgs<ListTypeInfo> & {
-    operation: 'read';
-    fieldKey: string;
+    operation: 'read'
+    fieldKey: string
     /**
      * The item being read
      */
-    item: ListTypeInfo['item'];
-  };
+    item: ListTypeInfo['item']
+  }
 
 export type FieldUpdateItemAccessArgs<ListTypeInfo extends BaseListTypeInfo> =
   BaseAccessArgs<ListTypeInfo> & {
-    operation: 'update';
-    fieldKey: string;
+    operation: 'update'
+    fieldKey: string
     /**
      * The item being updated
      */
-    item: ListTypeInfo['item'];
+    item: ListTypeInfo['item']
     /**
      * The input passed in from the GraphQL API
      */
-    inputData: ListTypeInfo['inputs']['update'];
-  };
+    inputData: ListTypeInfo['inputs']['update']
+  }
 
 export type FieldAccessControl<ListTypeInfo extends BaseListTypeInfo> =
   | IndividualFieldAccessControl<
@@ -165,8 +168,8 @@ export type FieldAccessControl<ListTypeInfo extends BaseListTypeInfo> =
       // delete: not supported
     >
   | {
-      read?: IndividualFieldAccessControl<FieldReadItemAccessArgs<ListTypeInfo>>;
-      create?: IndividualFieldAccessControl<FieldCreateItemAccessArgs<ListTypeInfo>>;
-      update?: IndividualFieldAccessControl<FieldUpdateItemAccessArgs<ListTypeInfo>>;
+      read?: IndividualFieldAccessControl<FieldReadItemAccessArgs<ListTypeInfo>>
+      create?: IndividualFieldAccessControl<FieldCreateItemAccessArgs<ListTypeInfo>>
+      update?: IndividualFieldAccessControl<FieldUpdateItemAccessArgs<ListTypeInfo>>
       // delete: not supported
-    };
+    }

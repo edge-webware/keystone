@@ -1,7 +1,9 @@
-import { list } from '@keystone-6/core';
-import { select, relationship, text, timestamp } from '@keystone-6/core/fields';
-import { document } from '@keystone-6/fields-document';
-import { allowAll } from '@keystone-6/core/access';
+import { list } from '@keystone-6/core'
+import { select, relationship, text, timestamp } from '@keystone-6/core/fields'
+import { document } from '@keystone-6/fields-document'
+import { allowAll } from '@keystone-6/core/access'
+
+import type { Lists } from '.keystone/types'
 
 export const lists = {
   Post: list({
@@ -62,4 +64,4 @@ export const lists = {
       }),
     },
   }),
-};
+} satisfies Lists

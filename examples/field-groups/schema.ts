@@ -1,9 +1,10 @@
-import { list, group } from '@keystone-6/core';
-import { allowAll, denyAll } from '@keystone-6/core/access';
-import { text } from '@keystone-6/core/fields';
-import type { Lists } from '.keystone/types';
+import { list, group } from '@keystone-6/core'
+import { allowAll, denyAll } from '@keystone-6/core/access'
+import { text } from '@keystone-6/core/fields'
 
-export const lists: Lists = {
+import type { Lists } from '.keystone/types'
+
+export const lists = {
   Post: list({
     access: allowAll,
     fields: {
@@ -29,10 +30,10 @@ export const lists: Lists = {
                 // TODO: text should allow you to prevent a defaultValue, then Prisma create could be non-null
                 // if (operation === 'create') return resolvedData.title.replace(/ /g, '-').toLowerCase()
                 if (operation === 'create') {
-                  return resolvedData.title?.replace(/ /g, '-').toLowerCase();
+                  return resolvedData.title?.replace(/ /g, '-').toLowerCase()
                 }
 
-                return resolvedData.slug;
+                return resolvedData.slug
               },
             },
           }),
@@ -46,4 +47,4 @@ export const lists: Lists = {
       }),
     },
   }),
-};
+} satisfies Lists

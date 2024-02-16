@@ -1,28 +1,28 @@
-import { randomBytes } from 'node:crypto';
-import type { CommonFieldConfig, BaseListTypeInfo, FieldTypeFunc } from '@keystone-6/core/types';
-import { jsonFieldTypePolyfilledForSQLite } from '@keystone-6/core/types';
-import { graphql } from '@keystone-6/core';
-import cloudinary from 'cloudinary';
+import { randomBytes } from 'node:crypto'
+import type { CommonFieldConfig, BaseListTypeInfo, FieldTypeFunc } from '@keystone-6/core/types'
+import { jsonFieldTypePolyfilledForSQLite } from '@keystone-6/core/types'
+import { graphql } from '@keystone-6/core'
+import cloudinary from 'cloudinary'
 
 type StoredFile = {
-  id: string;
-  filename: string;
-  originalFilename: string;
-  mimetype: any;
-  encoding: any;
-  _meta: cloudinary.UploadApiResponse;
-};
+  id: string
+  filename: string
+  originalFilename: string
+  mimetype: any
+  encoding: any
+  _meta: cloudinary.UploadApiResponse
+}
 
 type CloudinaryImageFieldConfig<ListTypeInfo extends BaseListTypeInfo> =
   CommonFieldConfig<ListTypeInfo> & {
     cloudinary: {
-      cloudName: string;
-      apiKey: string;
-      apiSecret: string;
-      folder?: string;
-    };
-    db?: { map?: string };
-  };
+      cloudName: string
+      apiKey: string
+      apiSecret: string
+      folder?: string
+    }
+    db?: { map?: string }
+  }
 
 const CloudinaryImageFormat = graphql.inputObject({
   name: 'CloudinaryImageFormat',
@@ -63,19 +63,19 @@ const CloudinaryImageFormat = graphql.inputObject({
     flags: graphql.arg({ type: graphql.String }),
     transformation: graphql.arg({ type: graphql.String }),
   },
-});
+})
 
 type CloudinaryImage_File = {
-  id: string | null;
-  filename: string | null;
-  originalFilename: string | null;
-  mimetype: string | null;
-  encoding: string | null;
-  publicUrl: string | null;
+  id: string | null
+  filename: string | null
+  originalFilename: string | null
+  mimetype: string | null
+  encoding: string | null
+  publicUrl: string | null
   publicUrlTransformed: (args: {
-    transformation: graphql.InferValueFromArg<graphql.Arg<typeof CloudinaryImageFormat>>;
-  }) => string | null;
-};
+    transformation: graphql.InferValueFromArg<graphql.Arg<typeof CloudinaryImageFormat>>
+  }) => string | null
+}
 
 // TODO: lvalue type required by pnpm :(
 export const outputType: graphql.ObjectType<CloudinaryImage_File> =
@@ -94,43 +94,43 @@ export const outputType: graphql.ObjectType<CloudinaryImage_File> =
           transformation: graphql.arg({ type: CloudinaryImageFormat }),
         },
         type: graphql.String,
-        resolve(rootVal, args) {
-          return rootVal.publicUrlTransformed(args);
+        resolve (rootVal, args) {
+          return rootVal.publicUrlTransformed(args)
         },
       }),
     },
-  });
+  })
 
 // TODO: no delete support
-export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo>({
+export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo> ({
   cloudinary: cloudinaryConfig,
   ...config
 }: CloudinaryImageFieldConfig<ListTypeInfo>): FieldTypeFunc<ListTypeInfo> {
   return meta => {
     if ((config as any).isIndexed === 'unique') {
-      throw Error("isIndexed: 'unique' is not a supported option for field type cloudinaryImage");
+      throw Error("isIndexed: 'unique' is not a supported option for field type cloudinaryImage")
     }
 
-    const inputArg = graphql.arg({ type: graphql.Upload });
-    async function resolveInput(
+    const inputArg = graphql.arg({ type: graphql.Upload })
+    async function resolveInput (
       uploadData: graphql.InferValueFromArg<typeof inputArg>
     ): Promise<StoredFile | undefined | null | 'DbNull'> {
       if (uploadData === null) {
-        return meta.provider === 'postgresql' || meta.provider === 'mysql' ? 'DbNull' : null;
+        return meta.provider === 'postgresql' || meta.provider === 'mysql' ? 'DbNull' : null
       }
       if (uploadData === undefined) {
-        return undefined;
+        return undefined
       }
 
-      const { createReadStream, filename: originalFilename, mimetype, encoding } = await uploadData;
-      const stream = createReadStream();
+      const { createReadStream, filename: originalFilename, mimetype, encoding } = await uploadData
+      const stream = createReadStream()
 
       // TODO: FIXME: stream can be null
       if (!stream) {
-        return undefined;
+        return undefined
       }
 
-      const id = randomBytes(20).toString('base64url');
+      const id = randomBytes(20).toString('base64url')
       const _meta = await new Promise<cloudinary.UploadApiResponse>((resolve, reject) => {
         const cloudinaryStream = cloudinary.v2.uploader.upload_stream(
           {
@@ -142,14 +142,14 @@ export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo>({
           },
           (error, result) => {
             if (error || !result) {
-              return reject(error);
+              return reject(error)
             }
-            resolve(result);
+            resolve(result)
           }
-        );
+        )
 
-        stream.pipe(cloudinaryStream);
-      });
+        stream.pipe(cloudinaryStream)
+      })
 
       return {
         id,
@@ -158,7 +158,7 @@ export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo>({
         mimetype,
         encoding,
         _meta,
-      };
+      }
     }
 
     return jsonFieldTypePolyfilledForSQLite(
@@ -172,11 +172,11 @@ export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo>({
         },
         output: graphql.field({
           type: outputType,
-          resolve({ value }) {
+          resolve ({ value }) {
             if (value === null) {
-              return null;
+              return null
             }
-            const val = value as any;
+            const val = value as any
             return {
               publicUrl: val?._meta?.secure_url ?? null,
               publicUrlTransformed: ({
@@ -184,32 +184,36 @@ export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo>({
               }: {
                 transformation: graphql.InferValueFromArg<
                   graphql.Arg<typeof CloudinaryImageFormat>
-                >;
+                >
               }) => {
-                if (!val._meta) return null;
+                if (!val._meta) return null
 
-                const { prettyName, ...rest } = transformation ?? {};
+                const { prettyName, ...rest } = transformation ?? {}
 
                 // no formatting options provided, return the publicUrl field
                 if (!Object.keys(rest).length) {
-                  return val?._meta?.secure_url ?? null;
+                  return val?._meta?.secure_url ?? null
                 }
 
-                const { public_id, format } = val._meta;
+                const { public_id, format } = val._meta
 
                 // ref https://github.com/cloudinary/cloudinary_npm/blob/439586eac73cee7f2803cf19f885e98f237183b3/src/utils.coffee#L472
-                // @ts-ignore
+                // @ts-expect-error
                 return cloudinary.url(public_id, {
                   type: 'upload',
                   format,
-                  secure: true,
+                  secure: true, // the default as of version 2
                   url_suffix: prettyName,
                   transformation,
                   cloud_name: cloudinaryConfig.cloudName,
-                });
+
+                  // SDK analytics defaults to true in version 2 (ref https://github.com/cloudinary/cloudinary_npm/commit/d2510eb677e553a45bc7e363b35d2c20b4c4b144#diff-9aa82f0ed674e050695a7422b1cd56d43ce47e6953688a16a003bf49c3481622)
+                  //   we default to false for the least surprise, keeping this upgrade as a patch
+                  urlAnalytics: false,
+                })
               },
               ...val,
-            };
+            }
           },
         }),
         views: '@keystone-6/cloudinary/views',
@@ -217,6 +221,6 @@ export function cloudinaryImage<ListTypeInfo extends BaseListTypeInfo>({
       {
         map: config.db?.map,
       }
-    );
-  };
+    )
+  }
 }

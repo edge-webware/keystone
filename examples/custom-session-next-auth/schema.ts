@@ -1,18 +1,18 @@
-import { denyAll, allOperations } from '@keystone-6/core/access';
-import { list } from '@keystone-6/core';
-import { text, relationship } from '@keystone-6/core/fields';
-import type { Session } from './session';
-import type { Lists } from '.keystone/types';
+import { denyAll, allOperations } from '@keystone-6/core/access'
+import { list } from '@keystone-6/core'
+import { text, relationship } from '@keystone-6/core/fields'
+import type { Session } from './session'
+import type { Lists } from '.keystone/types'
 
 // WARNING: this example is for demonstration purposes only
 //   as with each of our examples, it has not been vetted
 //   or tested for any particular usage
 
-function hasSession({ session }: { session?: Session }) {
-  return Boolean(session);
+function hasSession ({ session }: { session?: Session }) {
+  return Boolean(session)
 }
 
-export const lists: Lists<Session> = {
+export const lists = {
   Post: list({
     // WARNING - for this example, anyone can that can login can create, query, update and delete anything
     //    -- anyone with an account on the auth provider you are using can login
@@ -43,4 +43,4 @@ export const lists: Lists<Session> = {
       posts: relationship({ ref: 'Post.author', many: true }),
     },
   }),
-};
+} satisfies Lists<Session>

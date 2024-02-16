@@ -1,8 +1,9 @@
-import { list, config } from '@keystone-6/core';
-import { text } from '@keystone-6/core/fields';
-import { allowAll } from '@keystone-6/core/access';
+import { list, config } from '@keystone-6/core'
+import { text } from '@keystone-6/core/fields'
+import { allowAll } from '@keystone-6/core/access'
 
-console.log('the env is: ' + process.env.NODE_ENV);
+console.log('CLI-TESTS-NODE-ENV: ' + process.env.NODE_ENV)
+console.log('CLI-TESTS-NODE-ENV-EVAL: ' + eval('process.env' + '.NODE_ENV'))
 
 export default config({
   db: {
@@ -19,4 +20,4 @@ export default config({
       },
     }),
   },
-});
+})

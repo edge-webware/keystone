@@ -1,19 +1,19 @@
-import { list } from '@keystone-6/core';
-import { checkbox, password, relationship, text, timestamp } from '@keystone-6/core/fields';
-import { select } from '@keystone-6/core/fields';
-import { allowAll } from '@keystone-6/core/access';
-import type { Lists } from '.keystone/types';
+import { list } from '@keystone-6/core'
+import { checkbox, password, relationship, text, timestamp } from '@keystone-6/core/fields'
+import { select } from '@keystone-6/core/fields'
+import { allowAll } from '@keystone-6/core/access'
+import type { Lists } from '.keystone/types'
 
 // needs to be compatible with withAuth
 export type Session = {
-  listKey: string;
-  itemId: string;
-  data: {};
-};
+  listKey: string
+  itemId: string
+  data: {}
+}
 
-function isAssignedUserFilter({ session }: { session?: Session }) {
+function isAssignedUserFilter ({ session }: { session?: Session }) {
   // you need to have a session
-  if (!session) return false;
+  if (!session) return false
 
   // the authenticated user can edit posts they are assigned to
   return {
@@ -22,10 +22,10 @@ function isAssignedUserFilter({ session }: { session?: Session }) {
         equals: session.itemId,
       },
     },
-  };
+  }
 }
 
-export const lists: Lists<Session> = {
+export const lists = {
   Task: list({
     access: {
       operation: allowAll,
@@ -56,4 +56,4 @@ export const lists: Lists<Session> = {
       tasks: relationship({ ref: 'Task.assignedTo', many: true }),
     },
   }),
-};
+} satisfies Lists<Session>

@@ -1,5 +1,21 @@
 # @keystone-6/core
 
+## 5.7.2
+
+### Patch Changes
+
+- [#9003](https://github.com/keystonejs/keystone/pull/9003) [`fe280c5`](https://github.com/keystonejs/keystone/commit/fe280c54aa5c53e3ebe592ee3cfaf8806cdf8d11) Thanks [@dcousens](https://github.com/dcousens)! - Fix `@apollo/client` using invalid data from the cache [#9000](https://github.com/keystonejs/keystone/issues/9000)
+
+## 5.7.1
+
+### Patch Changes
+
+- [#8914](https://github.com/keystonejs/keystone/pull/8914) [`25a6586`](https://github.com/keystonejs/keystone/commit/25a6586a3bd4178580150a5b66e260c78dbee36d) Thanks [@dcousens](https://github.com/dcousens)! - Fix ui.inlineCreate: { ... } for relationships submitting the parent form of nested relationship fields
+
+- [#8909](https://github.com/keystonejs/keystone/pull/8909) [`029b5cf`](https://github.com/keystonejs/keystone/commit/029b5cf40f7d5d2be9bbcd253f10421f3fa37538) Thanks [@dcousens](https://github.com/dcousens)! - Fix ui.listView.initialSort preventing sort by "No field"
+
+- [#8898](https://github.com/keystonejs/keystone/pull/8898) [`871bdcb`](https://github.com/keystonejs/keystone/commit/871bdcb2cebddca9e0f5b8d9e4a45fc179a23e46) Thanks [@marekryb](https://github.com/marekryb)! - Fix prisma migrate non-interactive environment error
+
 ## 5.7.0
 
 ### Minor Changes

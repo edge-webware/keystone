@@ -1,11 +1,11 @@
-import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
-import { relationship, text, timestamp } from '@keystone-6/core/fields';
-import { document } from '@keystone-6/fields-document';
-import type { KeystoneConfig } from '@keystone-6/core/types';
-import { TypeInfo } from '.keystone/types';
+import { list } from '@keystone-6/core'
+import { allowAll } from '@keystone-6/core/access'
+import { relationship, text, timestamp } from '@keystone-6/core/fields'
+import { document } from '@keystone-6/fields-document'
 
-export const lists: KeystoneConfig<TypeInfo>['lists'] = {
+import type { Lists } from '.keystone/types'
+
+export const lists = {
   User: list({
     access: allowAll,
     fields: {
@@ -33,4 +33,4 @@ export const lists: KeystoneConfig<TypeInfo>['lists'] = {
       author: relationship({ ref: 'User.posts', many: false }),
     },
   }),
-};
+} satisfies Lists

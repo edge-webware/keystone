@@ -1,32 +1,33 @@
-import type { ScalarDBField, ScalarDBFieldDefault, DatabaseProvider } from '../../types';
-import type { ResolvedDBField } from './resolve-relationships';
-import type { InitialisedList } from './initialise-lists';
-import { areArraysEqual, getDBFieldKeyForFieldOnMultiField } from './utils';
+import type { ScalarDBField, ScalarDBFieldDefault } from '../../types'
+import type { ResolvedDBField } from './resolve-relationships'
+import type { InitialisedList } from './initialise-lists'
+import type { KeystoneConfig } from '../../types'
+import { areArraysEqual, getDBFieldKeyForFieldOnMultiField } from './utils'
 
 const modifiers = {
   required: '',
   optional: '?',
   many: '[]',
-};
+}
 
-function printIndex(fieldPath: string, index: undefined | 'index' | 'unique') {
+function printIndex (fieldPath: string, index: undefined | 'index' | 'unique') {
   return {
     none: '',
     unique: '@unique',
     index: `\n@@index([${fieldPath}])`,
-  }[index || ('none' as const)];
+  }[index ?? ('none' as const)]
 }
 
-function printNativeType(nativeType: string | undefined, datasourceName: string) {
-  return nativeType === undefined ? '' : ` @${datasourceName}.${nativeType}`;
+function printNativeType (nativeType: string | undefined, datasourceName: string) {
+  return nativeType === undefined ? '' : ` @${datasourceName}.${nativeType}`
 }
 
-function printScalarDefaultValue(defaultValue: ScalarDBFieldDefault) {
+function printScalarDefaultValue (defaultValue: ScalarDBFieldDefault) {
   if (defaultValue.kind === 'literal') {
     if (typeof defaultValue.value === 'string') {
-      return ` @default(${JSON.stringify(defaultValue.value)})`;
+      return ` @default(${JSON.stringify(defaultValue.value)})`
     }
-    return ` @default(${defaultValue.value.toString()})`;
+    return ` @default(${defaultValue.value.toString()})`
   }
   if (
     defaultValue.kind === 'now' ||
@@ -34,41 +35,41 @@ function printScalarDefaultValue(defaultValue: ScalarDBFieldDefault) {
     defaultValue.kind === 'cuid' ||
     defaultValue.kind === 'uuid'
   ) {
-    return ` @default(${defaultValue.kind}())`;
+    return ` @default(${defaultValue.kind}())`
   }
   if (defaultValue.kind === 'dbgenerated') {
-    return ` @default(dbgenerated(${JSON.stringify(defaultValue.value)}))`;
+    return ` @default(dbgenerated(${JSON.stringify(defaultValue.value)}))`
   }
-  return '';
+  return ''
 }
 
-function assertNever(arg: never): never {
-  throw new Error(`expected to never be called but was called with ${arg}`);
+function assertNever (arg: never): never {
+  throw new Error(`expected to never be called but was called with ${arg}`)
 }
 
-function printField(
+function printField (
   fieldPath: string,
   field: Exclude<ResolvedDBField, { kind: 'none' }>,
   datasourceName: string,
   lists: Record<string, InitialisedList>
 ): string {
   if (field.kind === 'scalar') {
-    const nativeType = printNativeType(field.nativeType, datasourceName);
-    const index = printIndex(fieldPath, field.index);
+    const nativeType = printNativeType(field.nativeType, datasourceName)
+    const index = printIndex(fieldPath, field.index)
 
-    const defaultValue = field.default ? printScalarDefaultValue(field.default) : '';
-    const map = field.map ? ` @map(${JSON.stringify(field.map)})` : '';
-    const updatedAt = field.updatedAt ? ' @updatedAt' : '';
-    return `${fieldPath} ${field.scalar}${
-      modifiers[field.mode]
-    }${updatedAt}${nativeType}${defaultValue}${map}${index}`;
+    const defaultValue = field.default ? printScalarDefaultValue(field.default) : ''
+    const map = field.map ? ` @map(${JSON.stringify(field.map)})` : ''
+    const updatedAt = field.updatedAt ? ' @updatedAt' : ''
+    return `${fieldPath} ${field.scalar}${modifiers[field.mode]}${updatedAt}${nativeType}${defaultValue}${map}${index}`
   }
+
   if (field.kind === 'enum') {
-    const index = printIndex(fieldPath, field.index);
-    const defaultValue = field.default ? ` @default(${field.default.value})` : '';
-    const map = field.map ? ` @map(${JSON.stringify(field.map)})` : '';
-    return `${fieldPath} ${field.name}${modifiers[field.mode]}${defaultValue}${map}${index}`;
+    const index = printIndex(fieldPath, field.index)
+    const defaultValue = field.default ? ` @default(${field.default.value})` : ''
+    const map = field.map ? ` @map(${JSON.stringify(field.map)})` : ''
+    return `${fieldPath} ${field.name}${modifiers[field.mode]}${defaultValue}${map}${index}`
   }
+
   if (field.kind === 'multi') {
     return Object.entries(field.fields)
       .map(([subField, field]) =>
@@ -79,39 +80,34 @@ function printField(
           lists
         )
       )
-      .join('\n');
+      .join('\n')
   }
+
   if (field.kind === 'relation') {
-    if (field.mode === 'many') {
-      return `${fieldPath} ${field.list}[] @relation("${field.relationName}")`;
-    }
-    if (field.foreignIdField.kind === 'none') {
-      return `${fieldPath} ${field.list}? @relation("${field.relationName}")`;
-    }
-    const relationIdFieldPath = `${fieldPath}Id`;
-    const relationField = `${fieldPath} ${field.list}? @relation("${field.relationName}", fields: [${relationIdFieldPath}], references: [id])`;
+    if (field.mode === 'many') return `${fieldPath} ${field.list}[] @relation("${field.relationName}")`
+    if (field.foreignIdField.kind === 'none') return `${fieldPath} ${field.list}? @relation("${field.relationName}")`
 
-    const foreignList = lists[field.list];
-    const foreignIdField = foreignList.resolvedDbFields.id;
+    const relationIdFieldPath = `${fieldPath}Id`
+    const relationField = `${fieldPath} ${field.list}? @relation("${field.relationName}", fields: [${relationIdFieldPath}], references: [id])`
 
-    assertDbFieldIsValidForIdField(foreignList.listKey, foreignList.isSingleton, foreignIdField);
-    const nativeType = printNativeType(foreignIdField.nativeType, datasourceName);
-    const index = printIndex(
-      relationIdFieldPath,
-      field.foreignIdField.kind === 'owned' ? 'index' : 'unique'
-    );
-    const relationIdField = `${relationIdFieldPath} ${foreignIdField.scalar}? @map(${JSON.stringify(
-      field.foreignIdField.map
-    )}) ${nativeType}${index}`;
-    return `${relationField}\n${relationIdField}`;
+    const foreignList = lists[field.list]
+    const foreignIdField = foreignList.resolvedDbFields.id
+
+    assertDbFieldIsValidForIdField(foreignList.listKey, foreignList.isSingleton, foreignIdField)
+    const nativeType = printNativeType(foreignIdField.nativeType, datasourceName)
+
+    const foreignIndex = field.foreignIdField.kind === 'owned' ? 'index' : 'unique'
+    const index = printIndex(relationIdFieldPath, foreignIndex)
+    const relationIdField = `${relationIdFieldPath} ${foreignIdField.scalar}? @map(${JSON.stringify(field.foreignIdField.map)}) ${nativeType}${index}`
+    return `${relationField}\n${relationIdField}`
   }
   // TypeScript's control flow analysis doesn't understand that this will never happen without the assertNever
   // (this will still correctly validate if any case is unhandled though)
-  return assertNever(field);
+  return assertNever(field)
 }
 
-function collectEnums(lists: Record<string, InitialisedList>) {
-  const enums: Record<string, { values: readonly string[]; firstDefinedByRef: string }> = {};
+function collectEnums (lists: Record<string, InitialisedList>) {
+  const enums: Record<string, { values: readonly string[], firstDefinedByRef: string }> = {}
   for (const [listKey, { resolvedDbFields }] of Object.entries(lists)) {
     for (const [fieldPath, field] of Object.entries(resolvedDbFields)) {
       const fields =
@@ -119,17 +115,17 @@ function collectEnums(lists: Record<string, InitialisedList>) {
           ? Object.entries(field.fields).map(
               ([key, field]) => [field, `${listKey}.${fieldPath} (sub field ${key})`] as const
             )
-          : [[field, `${listKey}.${fieldPath}`] as const];
+          : [[field, `${listKey}.${fieldPath}`] as const]
 
       for (const [field, ref] of fields) {
-        if (field.kind !== 'enum') continue;
-        const alreadyExistingEnum = enums[field.name];
+        if (field.kind !== 'enum') continue
+        const alreadyExistingEnum = enums[field.name]
         if (alreadyExistingEnum === undefined) {
           enums[field.name] = {
             values: field.values,
             firstDefinedByRef: ref,
-          };
-          continue;
+          }
+          continue
         }
         if (!areArraysEqual(alreadyExistingEnum.values, field.values)) {
           throw new Error(
@@ -141,17 +137,17 @@ function collectEnums(lists: Record<string, InitialisedList>) {
                 2
               )}\n` +
               `enum from ${ref}:\n${JSON.stringify(field.values, null, 2)}`
-          );
+          )
         }
       }
     }
   }
   return Object.entries(enums)
     .map(([enumName, { values }]) => `enum ${enumName} {\n${values.join('\n')}\n}`)
-    .join('\n');
+    .join('\n')
 }
 
-function assertDbFieldIsValidForIdField(
+function assertDbFieldIsValidForIdField (
   listKey: string,
   isSingleton: boolean,
   field: ResolvedDBField
@@ -159,59 +155,63 @@ function assertDbFieldIsValidForIdField(
   if (field.kind !== 'scalar') {
     throw new Error(
       `id fields must be either a String or Int Prisma scalar but the id field for the ${listKey} list is not a scalar`
-    );
+    )
   }
   // this may be loosened in the future
   if (field.scalar !== 'String' && field.scalar !== 'Int' && field.scalar !== 'BigInt') {
     throw new Error(
       `id fields must be String, Int or BigInt Prisma scalars but the id field for the ${listKey} list is a ${field.scalar} scalar`
-    );
+    )
   }
   if (field.mode !== 'required') {
     throw new Error(
       `id fields must be a singular required field but the id field for the ${listKey} list is ${
         field.mode === 'many' ? 'a many' : 'an optional'
       } field`
-    );
+    )
   }
   if (field.index !== undefined) {
     throw new Error(
       `id fields must not specify indexes themselves but the id field for the ${listKey} list specifies an index`
-    );
+    )
   }
 }
 
-export function printPrismaSchema(
+export function printPrismaSchema (
+  config: KeystoneConfig,
   lists: Record<string, InitialisedList>,
-  prismaClientPath: string | undefined,
-  provider: DatabaseProvider,
-  prismaPreviewFeatures?: readonly string[] | null,
-  additionalPrismaDatasourceProperties?: { [key: string]: string } | null,
-  extendPrismaCompleteSchema?: (schema: string) => string
 ) {
-  const additionalDataSources = Object.entries(additionalPrismaDatasourceProperties || {}).map(
-    ([key, value]) => `${key} = "${value}"`
-  );
+  const {
+    prismaClientPath,
+    provider,
+    prismaPreviewFeatures,
+    additionalPrismaDatasourceProperties,
+    extendPrismaSchema: extendPrismaCompleteSchema
+  } = config.db
 
   const prismaSchema = [
     `// This file is automatically generated by Keystone, do not modify it manually.`,
     `// Modify your Keystone config when you want to change this.`,
     ``,
     `datasource ${provider} {`,
-    `url = env("DATABASE_URL")`,
-    `shadowDatabaseUrl = env("SHADOW_DATABASE_URL")`,
-    `provider = "${provider}"`,
-    ...additionalDataSources,
+    `  url = env("DATABASE_URL")`,
+    `  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")`,
+    `  provider = "${provider}"`,
+    ...function* () {
+      for (const [key, value] of Object.entries(additionalPrismaDatasourceProperties ?? {})) {
+        yield `  ${key} = "${value}"`
+      }
+    }(),
     `}`,
     ``,
     `generator client {`,
-    `provider = "prisma-client-js"`,
-    ...(prismaClientPath ? [`output = "${prismaClientPath}"`] : []),
+    `  provider = "prisma-client-js"`,
+    ...(prismaClientPath === '@prisma/client' ? [] : [`  output = "${prismaClientPath}"`]),
     ...(prismaPreviewFeatures?.length
-      ? [`previewFeatures = ["${prismaPreviewFeatures.join('","')}"]`]
+      ? [`  previewFeatures = ["${prismaPreviewFeatures.join('","')}"]`]
       : []),
     '}',
-  ];
+  ]
 
   for (const [
     listKey,
@@ -221,38 +221,38 @@ export function printPrismaSchema(
       isSingleton,
     },
   ] of Object.entries(lists)) {
-    const listPrisma = [`model ${listKey} {`];
+    const listPrisma = [`model ${listKey} {`]
 
     for (const [fieldPath, field] of Object.entries(resolvedDbFields)) {
       if (fieldPath === 'id') {
-        assertDbFieldIsValidForIdField(listKey, isSingleton, field);
+        assertDbFieldIsValidForIdField(listKey, isSingleton, field)
       }
 
       if (field.kind !== 'none') {
-        let fieldPrisma = printField(fieldPath, field, provider, lists);
+        let fieldPrisma = printField(fieldPath, field, provider, lists)
         if (fieldPath === 'id') {
-          fieldPrisma += ' @id';
+          fieldPrisma += ' @id'
         }
 
         listPrisma.push(
           field.extendPrismaSchema ? field.extendPrismaSchema(fieldPrisma) : fieldPrisma
-        );
+        )
       }
     }
 
     if (mapping !== undefined) {
-      listPrisma.push(`@@map(${JSON.stringify(mapping)})`);
+      listPrisma.push(`@@map(${JSON.stringify(mapping)})`)
     }
 
-    listPrisma.push('}');
-    const listPrismaStr = listPrisma.join('\n');
+    listPrisma.push('}')
+    const listPrismaStr = listPrisma.join('\n')
 
     prismaSchema.push(
       extendPrismaListSchema ? extendPrismaListSchema(listPrismaStr) : listPrismaStr
-    );
+    )
   }
-  prismaSchema.push(collectEnums(lists));
+  prismaSchema.push(collectEnums(lists))
 
-  const prismaSchemaStr = prismaSchema.join('\n');
-  return extendPrismaCompleteSchema ? extendPrismaCompleteSchema(prismaSchemaStr) : prismaSchemaStr;
+  const prismaSchemaStr = prismaSchema.join('\n')
+  return extendPrismaCompleteSchema?.(prismaSchemaStr) ?? prismaSchemaStr
 }

@@ -1,9 +1,9 @@
-import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
-import { text, timestamp } from '@keystone-6/core/fields';
-import type { Lists } from './my-types';
+import { list } from '@keystone-6/core'
+import { allowAll } from '@keystone-6/core/access'
+import { text, timestamp } from '@keystone-6/core/fields'
+import type { Lists } from './my-types'
 
-export const lists: Lists = {
+export const lists = {
   Post: list({
     access: allowAll,
     fields: {
@@ -27,11 +27,11 @@ export const lists: Lists = {
           //
 
           // TODO: FIXME, babel and pnpm issues
-        })) as readonly { title: string; content: string }[];
+        })) as readonly { title: string, content: string }[]
         // })) satisfies readonly { title: string; content: string }[];
 
-        console.log(posts);
+        console.log(posts)
       },
     },
   }),
-};
+} satisfies Lists

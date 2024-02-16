@@ -1,7 +1,9 @@
-import { list } from '@keystone-6/core';
-import { allowAll } from '@keystone-6/core/access';
-import { text } from '@keystone-6/core/fields';
-import { cloudinaryImage } from '@keystone-6/cloudinary';
+import { list } from '@keystone-6/core'
+import { allowAll } from '@keystone-6/core/access'
+import { text } from '@keystone-6/core/fields'
+import { cloudinaryImage } from '@keystone-6/cloudinary'
+
+import type { Lists } from '.keystone/types'
 
 export const lists = {
   Post: list({
@@ -19,4 +21,4 @@ export const lists = {
       }),
     },
   }),
-};
+} satisfies Lists

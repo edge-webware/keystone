@@ -32,6 +32,14 @@ We will cover each of these options below.
 The configuration object has a TypeScript type of `KeystoneConfig`, which can be imported from `@keystone-6/core/types`.
 This type definition should be considered the source of truth for the available configuration options.
 
+Note: It is important to pass a `TypeInfo` type argument to the config function as it ensures proper typing for the [Keystone Context](../context/overview). This type is automatically created in `.keystone/types`. You can customize the output path of the generated type by specifying it in the config object.
+
+```typescript
+import { TypeInfo } from ".keystone/types";
+
+export default config<TypeInfo>({ /* ... */ });
+```
+
 ## lists
 
 The `lists` config option is where you define the data model, or schema, of the Keystone system.
@@ -42,8 +50,9 @@ See the [Lists API](./lists) docs for details on how to use this function.
 ```typescript
 import type { ListSchemaConfig } from '@keystone-6/core/types';
 import { config } from '@keystone-6/core';
+import { TypeInfo } from ".keystone/types";
 
-export default config({
+export default config<TypeInfo>({
   lists: { /* ... */ },
   /* ... */
 });
@@ -74,7 +83,7 @@ These database types are powered by their corresponding Prisma database provider
 ### postgresql
 
 ```typescript
-export default config({
+export default config<TypeInfo>({
   db: {
     provider: 'postgresql',
     url: 'postgres://dbuser:dbpass@localhost:5432/keystone',
@@ -91,7 +100,7 @@ export default config({
 ### mysql
 
 ```typescript
-export default config({
+export default config<TypeInfo>({
   db: {
     provider: 'mysql',
     url: 'mysql://dbuser:dbpass@localhost:3306/keystone',
@@ -107,7 +116,7 @@ export default config({
 ### sqlite
 
 ```typescript
-export default config({
+export default config<TypeInfo>({
   db: {
     provider: 'sqlite',
     url: 'file:./keystone.db',
@@ -160,7 +169,7 @@ Advanced configuration:
   See the [Custom Admin UI Pages](../guides/custom-admin-ui-pages) guide for details on simpler ways to customise your Admin UI.
 
 ```typescript
-export default config({
+export default config<TypeInfo>({
   ui: {
     isDisabled: false,
     isAccessAllowed: async (context) => context.session !== undefined,
@@ -212,13 +221,13 @@ Options:
 - `extendHttpServer` (default: `undefined`): Allows you to extend the node `http` server that runs Keystone.
 
 ```typescript
-export default config({
+export default config<TypeInfo>({
   server: {
     cors: { origin: ['http://localhost:7777'], credentials: true },
     port: 3000,
     maxFileSize: 200 * 1024 * 1024,
-    extendExpressApp: (app, commonContext) => { /* ... */ },
-    extendHttpServer: (httpServer, commonContext, graphQLSchema) => { /* ... */ },
+    extendExpressApp: async (app, commonContext) => { /* ... */ },
+    extendHttpServer: async (httpServer, commonContext) => { /* ... */ },
   },
   /* ... */
 });
@@ -236,7 +245,7 @@ The function is passed two arguments:
 For example, you could add your own request logging middleware:
 
 ```ts
-export default config({
+export default config<TypeInfo>({
   server: {
     extendExpressApp: (app) => {
       app.use((req, res, next) => {
@@ -251,7 +260,7 @@ export default config({
 Or add a custom route handler:
 
 ```ts
-export default config({
+export default config<TypeInfo>({
   server: {
     extendExpressApp: (app) => {
       app.get('/_version', (req, res) => {
@@ -265,9 +274,9 @@ export default config({
 You could also use it to add custom REST endpoints to your server, by creating a context for the request and using the Query API Keystone provides:
 
 ```ts
-export default config({
+export default config<TypeInfo>({
   server: {
-extendExpressApp: (app, commonContext) => {
+    extendExpressApp: (app, commonContext) => {
       app.get('/api/users', async (req, res) => {
         const context = await commonContext.withRequest(req, res);
         const users = await context.query.User.findMany();
@@ -290,7 +299,6 @@ The function is passed in 3 arguments:
 
 - `server` - this is the HTTP server that you can then extend
 - `context`: A Keystone Context
-- `graphqlSchema` - this is the keystone graphql schema that can be used in a WebSocket GraphQL server for subscriptions
 
 For example, this function could be used to listen for `'upgrade'` requests for a WebSocket server when adding support for GraphQL subscriptions
 
@@ -298,15 +306,15 @@ For example, this function could be used to listen for `'upgrade'` requests for 
 import { WebSocketServer } from 'ws';
 import { useServer as wsUseServer } from 'graphql-ws/lib/use/ws';
 
-export default config({
+export default config<TypeInfo>({
   server: {
-    extendHttpServer: (httpServer, commonContext, graphqlSchema) => {
+    extendHttpServer: (httpServer, commonContext) => {
       const wss = new WebSocketServer({
         server: httpServer,
         path: '/api/graphql',
       });
 
-      wsUseServer({ schema: graphqlSchema }, wss);
+      wsUseServer({ schema: commonContext.graphql.schema }, wss);
     },
   },
 });
@@ -329,7 +337,7 @@ In general you will use `SessionStrategy` objects from the `@keystone-6/core/ses
 ```typescript
 import { statelessSessions } from '@keystone-6/core/session';
 
-export default config({
+export default config<TypeInfo>({
   session: statelessSessions({ /* ... */ }),
   /* ... */
 });
@@ -359,7 +367,7 @@ Options:
 - `schemaPath` (default: `schema.graphql`): The path of the generated GraphQL API schema.
 
 ```typescript
-export default config({
+export default config<TypeInfo>({
   graphql: {
     debug: process.env.NODE_ENV !== 'production',
     path: '/api/graphql',
@@ -374,25 +382,21 @@ export default config({
 
 ## extendGraphqlSchema
 
-```ts
-import type { ExtendGraphqlSchema } from '@keystone-6/core/types';
-```
-
 The `extendGraphqlSchema` config option allows you to extend the GraphQL API which is generated by Keystone based on your schema definition.
-It has a TypeScript type of `ExtendGraphqlSchema`.
 
 `extendGraphqlSchema` expects a function that takes the GraphQL Schema generated by Keystone and returns a valid GraphQL Schema
 
 ```typescript
-import { config, graphql } from '@keystone-6/core';
+import type { GraphQLSchema } from 'graphql'
+import { config, graphql } from '@keystone-6/core'
 
-export default config({
-  extendGraphqlSchema: keystoneSchema => {
+export default config<TypeInfo>({
+  extendGraphqlSchema: (keystoneSchema: GraphQLSchema) => {
     /* ... */
     return newExtendedSchema
   }
   /* ... */
-});
+})
 ```
 
 See the [schema extension guide](../guides/schema-extension) for more details and tooling options on how to extend your GraphQL API.
@@ -472,7 +476,7 @@ const {
   S3_SECRET_ACCESS_KEY: secretAccessKey = 'keystone',
 } = process.env;
 
-export default config({
+export default config<TypeInfo>({
    /* ... */
   storage: {
     my_S3_images: {
