@@ -1,4 +1,5 @@
 // most of these utilities come from https://github.com/preconstruct/preconstruct/blob/07a24f73f17980c121382bb00ae1c05355294fe4/packages/cli/test-utils/index.ts
+import { spawn } from 'node:child_process';
 import path from 'node:path'
 import { format } from 'node:util'
 import fs from 'node:fs'
@@ -7,7 +8,7 @@ import * as fse from 'fs-extra'
 import fastGlob from 'fast-glob'
 import chalk from 'chalk'
 
-import { MigrateEngine } from '@prisma/migrate'
+import { SchemaEngine } from '@prisma/migrate'
 import { uriToCredentials } from '@prisma/internals'
 import { cli } from '@keystone-6/core/scripts/cli'
 
@@ -82,6 +83,34 @@ export async function runCommand (cwd: string, args: string | string[]) {
   }
 }
 
+export async function spawnCommand (cwd: string, commands: string[]) {
+  let output = ''
+  return new Promise<string>((resolve, reject) => {
+    const p = spawn('node', [cliBinPath, ...commands], { cwd })
+    p.stdout.on('data', (data) => (output += data.toString('utf-8')))
+    p.stderr.on('data', (data) => (output += data.toString('utf-8')))
+    p.on('error', err => reject(err))
+    p.on('exit', exitCode => {
+      if (typeof exitCode === 'number' && exitCode !== 0) return reject(new ExitError(exitCode))
+      resolve(output)
+    })
+  })
+}
+
+export async function spawnCommand2 (cwd: string, commands: string[]) {
+  let output = ''
+  return new Promise<{
+    exitCode: number | null,
+    output: string
+  }>((resolve, reject) => {
+    const p = spawn('node', [cliBinPath, ...commands], { cwd })
+    p.stdout.on('data', (data) => (output += data.toString('utf-8')))
+    p.stderr.on('data', (data) => (output += data.toString('utf-8')))
+    p.on('error', err => reject(err))
+    p.on('exit', exitCode => (resolve({ exitCode, output })))
+  })
+}
+
 let dirsToRemove: string[] = []
 
 afterAll(async () => {
@@ -93,7 +122,7 @@ afterAll(async () => {
   dirsToRemove = []
 })
 
-export async function testdir (dir: Fixture): Promise<string> {
+export async function testdir (dir: Fixture) {
   const temp = await fsp.mkdtemp(__dirname)
   dirsToRemove.push(temp)
   await Promise.all(
@@ -160,7 +189,7 @@ export async function getFiles (
 }
 
 export async function introspectDb (cwd: string, url: string) {
-  const engine = new MigrateEngine({ projectDir: cwd })
+  const engine = new SchemaEngine({ projectDir: cwd })
   try {
     const { datamodel } = await engine.introspect({
       schema: `datasource db {
@@ -169,6 +198,10 @@ export async function introspectDb (cwd: string, url: string) {
 }`,
     })
     return datamodel
+  } catch (e: any) {
+    if (e.code === 'P4001') return null
+    throw e
+
   } finally {
     engine.stop()
   }

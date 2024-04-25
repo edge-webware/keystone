@@ -1,5 +1,5 @@
-import type { KeystoneContext } from './context'
-import type { BaseItem } from './next-fields'
+import { type BaseItem } from './next-fields'
+import { type KeystoneContext } from '../types'
 
 type GraphQLInput = Record<string, any>
 
@@ -15,8 +15,9 @@ export type BaseListTypeInfo<Session = any> = {
     uniqueWhere: { readonly id?: string | number | null } & GraphQLInput
     orderBy: Record<string, 'asc' | 'desc' | null>
   }
+
   /**
-   * WARNING: may be renamed in patch
+   * WARNING: may change in patch
    */
   prisma: {
     create: Record<string, any>

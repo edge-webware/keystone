@@ -1,4 +1,4 @@
-import type { CacheHint } from '@apollo/cache-control-types'
+import { type CacheHint } from '@apollo/cache-control-types'
 import { GraphQLString, isInputObjectType } from 'graphql'
 import { type getGqlNames, QueryMode } from '../../types'
 import {
@@ -9,14 +9,24 @@ import {
   type GraphQLTypesForList,
   type ListGraphQLTypes,
   type ListHooks,
-  type KeystoneConfig,
+  type __ResolvedKeystoneConfig,
   type MaybePromise,
   type NextFieldType,
+  type FieldTypeFunc,
 } from '../../types'
 import { graphql } from '../..'
-import type { FieldHooks, ResolvedListHooks, ResolvedFieldHooks } from '../../types/config/hooks'
-import type { FilterOrderArgs } from '../../types/config/fields'
-import type { MaybeItemFunction, MaybeSessionFunction } from '../../types/config/lists'
+import {
+  type FieldHooks,
+  type ResolvedListHooks,
+  type ResolvedFieldHooks
+} from '../../types/config/hooks'
+import {
+  type FilterOrderArgs
+} from '../../types/config/fields'
+import {
+  type MaybeItemFunction,
+  type MaybeSessionFunction
+} from '../../types/config/lists'
 import {
   type ResolvedFieldAccessControl,
   type ResolvedListAccessControl,
@@ -133,43 +143,77 @@ function throwIfNotAFilter (x: unknown, listKey: string, fieldKey: string) {
   )
 }
 
-function getIsEnabled (listsConfig: KeystoneConfig['lists']) {
-  const isEnabled: Record<string, IsEnabled> = {}
+type ListConfigType = __ResolvedKeystoneConfig['lists'][string]
+type FieldConfigType = ReturnType<FieldTypeFunc<any>>
+type PartiallyInitialisedList1 = { graphql: { isEnabled: IsEnabled } }
+type PartiallyInitialisedList2 = Omit<InitialisedList, 'lists' | 'resolvedDbFields'>
 
-  for (const [listKey, listConfig] of Object.entries(listsConfig)) {
-    const omit = listConfig.graphql?.omit
-    const { defaultIsFilterable, defaultIsOrderable } = listConfig
-    if (!omit) {
-      // We explicity check for boolean/function values here to ensure the dev hasn't made a mistake
-      // when defining these values. We avoid duck-typing here as this is security related
-      // and we want to make it hard to write incorrect code.
-      throwIfNotAFilter(defaultIsFilterable, listKey, 'defaultIsFilterable')
-      throwIfNotAFilter(defaultIsOrderable, listKey, 'defaultIsOrderable')
-    }
-    if (omit === true) {
-      isEnabled[listKey] = {
-        type: false,
-        query: false,
-        create: false,
-        update: false,
-        delete: false,
-        filter: false,
-        orderBy: false,
-      }
-    } else {
-      isEnabled[listKey] = {
-        type: true,
-        query: !omit?.query,
-        create: !omit?.create,
-        update: !omit?.update,
-        delete: !omit?.delete,
-        filter: defaultIsFilterable ?? true,
-        orderBy: defaultIsOrderable ?? true,
-      }
+function getIsEnabled (listKey: string, listConfig: ListConfigType) {
+  const omit = listConfig.graphql?.omit ?? false
+  const {
+    defaultIsFilterable = true,
+    defaultIsOrderable = true
+  } = listConfig
+
+  // TODO: check types in initConfig
+  throwIfNotAFilter(defaultIsFilterable, listKey, 'defaultIsFilterable')
+  throwIfNotAFilter(defaultIsOrderable, listKey, 'defaultIsOrderable')
+
+  if (typeof omit === 'boolean') {
+    const notOmit = !omit
+    return {
+      type: notOmit,
+      query: notOmit,
+      create: notOmit,
+      update: notOmit,
+      delete: notOmit,
+      filter: notOmit ? defaultIsFilterable : false,
+      orderBy: notOmit ? defaultIsOrderable : false,
     }
   }
 
-  return isEnabled
+  return {
+    type: true,
+    query: !omit.query,
+    create: !omit.create,
+    update: !omit.update,
+    delete: !omit.delete,
+    filter: defaultIsFilterable,
+    orderBy: defaultIsOrderable,
+  }
+}
+
+function getIsEnabledField (f: FieldConfigType, listKey: string, listConfig: PartiallyInitialisedList1) {
+  const omit = f.graphql?.omit ?? false
+  const {
+    isFilterable = listConfig.graphql.isEnabled.filter,
+    isOrderable = listConfig.graphql.isEnabled.orderBy,
+  } = f
+
+  // TODO: check types in initConfig
+  throwIfNotAFilter(isFilterable, listKey, 'isFilterable')
+  throwIfNotAFilter(isOrderable, listKey, 'isOrderable')
+
+  if (typeof omit === 'boolean') {
+    const notOmit = !omit
+    return {
+      type: notOmit,
+      read: notOmit,
+      create: notOmit,
+      update: notOmit,
+      filter: notOmit ? isFilterable : false,
+      orderBy: notOmit ? isOrderable : false,
+    }
+  }
+
+  return {
+    type: true,
+    read: !omit.read,
+    create: !omit.create,
+    update: !omit.update,
+    filter: !omit.read ? isFilterable : false, // prevent filtering if read is false
+    orderBy: !omit.read ? isOrderable : false, // prevent ordering if read is false
+  }
 }
 
 function defaultOperationHook () {}
@@ -185,8 +229,28 @@ function parseListHooksResolveInput (f: ListHooks<BaseListTypeInfo>['resolveInpu
     }
   }
 
-  const { create = defaultListHooksResolveInput, update = defaultListHooksResolveInput } = f ?? {}
+  const {
+    create = defaultListHooksResolveInput,
+    update = defaultListHooksResolveInput
+  } = f ?? {}
   return { create, update }
+}
+
+function parseListHooksValidate (f: ListHooks<BaseListTypeInfo>['validate']) {
+  if (typeof f === 'function') {
+    return {
+      create: f,
+      update: f,
+      delete: f,
+    }
+  }
+
+  const {
+    create = defaultOperationHook,
+    update = defaultOperationHook,
+    delete: delete_ = defaultOperationHook,
+  } = f ?? {}
+  return { create, update, delete: delete_ }
 }
 
 function parseListHooksBeforeOperation (f: ListHooks<BaseListTypeInfo>['beforeOperation']) {
@@ -223,6 +287,15 @@ function parseListHooksAfterOperation (f: ListHooks<BaseListTypeInfo>['afterOper
   return { create, update, delete: _delete }
 }
 
+function parseListHooks (hooks: ListHooks<BaseListTypeInfo>): ResolvedListHooks<BaseListTypeInfo> {
+  return {
+    resolveInput: parseListHooksResolveInput(hooks.resolveInput),
+    validate: parseListHooksValidate(hooks.validate),
+    beforeOperation: parseListHooksBeforeOperation(hooks.beforeOperation),
+    afterOperation: parseListHooksAfterOperation(hooks.afterOperation),
+  }
+}
+
 function defaultFieldHooksResolveInput ({
   resolvedData,
   fieldKey,
@@ -233,26 +306,37 @@ function defaultFieldHooksResolveInput ({
   return resolvedData[fieldKey]
 }
 
-function parseListHooks (hooks: ListHooks<BaseListTypeInfo>): ResolvedListHooks<BaseListTypeInfo> {
-  return {
-    resolveInput: parseListHooksResolveInput(hooks.resolveInput),
-    validateInput: hooks.validateInput ?? defaultOperationHook,
-    validateDelete: hooks.validateDelete ?? defaultOperationHook,
-    beforeOperation: parseListHooksBeforeOperation(hooks.beforeOperation),
-    afterOperation: parseListHooksAfterOperation(hooks.afterOperation),
-  }
-}
-
 function parseFieldHooks (
-  hooks: FieldHooks<BaseListTypeInfo>
+  fieldKey: string,
+  hooks: FieldHooks<BaseListTypeInfo>,
 ): ResolvedFieldHooks<BaseListTypeInfo> {
+  /** @deprecated, TODO: remove in breaking change */
+  if (hooks.validate !== undefined) {
+    if (hooks.validateInput !== undefined) throw new TypeError(`"hooks.validate" conflicts with "hooks.validateInput" for the "${fieldKey}" field`)
+    if (hooks.validateDelete !== undefined) throw new TypeError(`"hooks.validate" conflicts with "hooks.validateDelete" for the "${fieldKey}" field`)
+
+    if (typeof hooks.validate === 'function') {
+      return parseFieldHooks(fieldKey, {
+        ...hooks,
+        validate: {
+          create: hooks.validate,
+          update: hooks.validate,
+          delete: hooks.validate,
+        }
+      })
+    }
+  }
+
   return {
     resolveInput: {
       create: hooks.resolveInput ?? defaultFieldHooksResolveInput,
       update: hooks.resolveInput ?? defaultFieldHooksResolveInput,
     },
-    validateInput: hooks.validateInput ?? defaultOperationHook,
-    validateDelete: hooks.validateDelete ?? defaultOperationHook,
+    validate: {
+      create: hooks.validate?.create ?? hooks.validateInput ?? defaultOperationHook,
+      update: hooks.validate?.update ?? hooks.validateInput ?? defaultOperationHook,
+      delete: hooks.validate?.delete ?? hooks.validateDelete ?? defaultOperationHook,
+    },
     beforeOperation: {
       create: hooks.beforeOperation ?? defaultOperationHook,
       update: hooks.beforeOperation ?? defaultOperationHook,
@@ -266,14 +350,12 @@ function parseFieldHooks (
   }
 }
 
-type PartiallyInitialisedList = Omit<InitialisedList, 'lists' | 'resolvedDbFields'>
-
 function getListsWithInitialisedFields (
-  { storage: configStorage, lists: listsConfig, db: { provider } }: KeystoneConfig,
+  { storage: configStorage, lists: listsConfig, db: { provider } }: __ResolvedKeystoneConfig,
   listGraphqlTypes: Record<string, ListGraphQLTypes>,
-  intermediateLists: Record<string, { graphql: { isEnabled: IsEnabled } }>
+  intermediateLists: Record<string, PartiallyInitialisedList1>
 ) {
-  const result: Record<string, PartiallyInitialisedList> = {}
+  const result: Record<string, PartiallyInitialisedList2> = {}
 
   for (const [listKey, list] of Object.entries(listsConfig)) {
     const intermediateList = intermediateLists[listKey]
@@ -310,24 +392,7 @@ function getListsWithInitialisedFields (
         getStorage: storage => configStorage?.[storage],
       })
 
-      // We explicity check for boolean values here to ensure the dev hasn't made a mistake
-      // when defining these values. We avoid duck-typing here as this is security related
-      // and we want to make it hard to write incorrect code.
-      throwIfNotAFilter(f.isFilterable, listKey, 'isFilterable')
-      throwIfNotAFilter(f.isOrderable, listKey, 'isOrderable')
-
-      const omit = f.graphql?.omit
-      const read = omit !== true && !omit?.read
-      const _isEnabled = {
-        read,
-        create: omit !== true && !omit?.create,
-        update: omit !== true && !omit?.update,
-        // Filter and orderBy can be defaulted at the list level, otherwise they
-        // default to `false` if no value was set at the list level.
-        filter: read && (f.isFilterable ?? intermediateList.graphql.isEnabled.filter),
-        orderBy: read && (f.isOrderable ?? intermediateList.graphql.isEnabled.orderBy),
-      }
-
+      const isEnabledField = getIsEnabledField(f, listKey, intermediateList)
       const fieldModes = {
         create: f.ui?.createView?.fieldMode ?? list.ui?.createView?.defaultFieldMode ?? 'edit',
         item: f.ui?.itemView?.fieldMode ?? list.ui?.itemView?.defaultFieldMode ?? 'edit',
@@ -337,10 +402,10 @@ function getListsWithInitialisedFields (
       resultFields[fieldKey] = {
         dbField: f.dbField as ResolvedDBField,
         access: parseFieldAccessControl(f.access),
-        hooks: parseFieldHooks(f.hooks ?? {}),
+        hooks: parseFieldHooks(fieldKey, f.hooks ?? {}),
         graphql: {
           cacheHint: f.graphql?.cacheHint,
-          isEnabled: _isEnabled,
+          isEnabled: isEnabledField,
           isNonNull: {
             read: f.graphql?.isNonNull?.read ?? false,
             create: f.graphql?.isNonNull?.create ?? false,
@@ -352,20 +417,20 @@ function getListsWithInitialisedFields (
           description: f.ui?.description ?? null,
           views: f.ui?.views ?? null,
           createView: {
-            fieldMode: _isEnabled.create ? fieldModes.create : 'hidden',
+            fieldMode: isEnabledField.create ? fieldModes.create : 'hidden',
           },
 
           itemView: {
             fieldPosition: f.ui?.itemView?.fieldPosition ?? 'form',
-            fieldMode: _isEnabled.update
+            fieldMode: isEnabledField.update
               ? fieldModes.item
-              : _isEnabled.read && fieldModes.item !== 'hidden'
-              ? 'read'
-              : 'hidden',
+              : isEnabledField.read && fieldModes.item !== 'hidden'
+                ? 'read'
+                : 'hidden',
           },
 
           listView: {
-            fieldMode: _isEnabled.read ? fieldModes.list : 'hidden',
+            fieldMode: isEnabledField.read ? fieldModes.list : 'hidden',
           },
         },
 
@@ -504,7 +569,7 @@ function graphqlForOutputField (field: InitialisedField) {
 }
 
 function getListGraphqlTypes (
-  listsConfig: KeystoneConfig['lists'],
+  listsConfig: __ResolvedKeystoneConfig['lists'],
   lists: Record<string, InitialisedList>,
   intermediateLists: Record<string, { graphql: { isEnabled: IsEnabled } }>
 ): Record<string, ListGraphQLTypes> {
@@ -769,14 +834,18 @@ function getListGraphqlTypes (
  * 5. Handle relationships - ensure correct linking between two sides of all relationships (including one-sided relationships)
  * 6.
  */
-export function initialiseLists (config: KeystoneConfig): Record<string, InitialisedList> {
+export function initialiseLists (config: __ResolvedKeystoneConfig): Record<string, InitialisedList> {
   const listsConfig = config.lists
 
   let intermediateLists
   intermediateLists = Object.fromEntries(
-    Object.entries(getIsEnabled(listsConfig)).map(([key, isEnabled]) => [
+    Object.entries(listsConfig).map(([key, listConfig]) => [
       key,
-      { graphql: { isEnabled } },
+      {
+        graphql: {
+          isEnabled: getIsEnabled(key, listConfig)
+        }
+      },
     ])
   )
 

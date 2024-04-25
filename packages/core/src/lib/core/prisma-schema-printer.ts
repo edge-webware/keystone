@@ -1,7 +1,12 @@
-import type { ScalarDBField, ScalarDBFieldDefault } from '../../types'
-import type { ResolvedDBField } from './resolve-relationships'
-import type { InitialisedList } from './initialise-lists'
-import type { KeystoneConfig } from '../../types'
+import {
+  type ScalarDBField,
+  type ScalarDBFieldDefault
+} from '../../types'
+import { type ResolvedDBField } from './resolve-relationships'
+import { type InitialisedList } from './initialise-lists'
+import {
+  type __ResolvedKeystoneConfig
+} from '../../types'
 import { areArraysEqual, getDBFieldKeyForFieldOnMultiField } from './utils'
 
 const modifiers = {
@@ -178,14 +183,12 @@ function assertDbFieldIsValidForIdField (
 }
 
 export function printPrismaSchema (
-  config: KeystoneConfig,
+  config: __ResolvedKeystoneConfig,
   lists: Record<string, InitialisedList>,
 ) {
   const {
     prismaClientPath,
     provider,
-    prismaPreviewFeatures,
-    additionalPrismaDatasourceProperties,
     extendPrismaSchema: extendPrismaCompleteSchema
   } = config.db
 
@@ -197,19 +200,11 @@ export function printPrismaSchema (
     `  url = env("DATABASE_URL")`,
     `  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")`,
     `  provider = "${provider}"`,
-    ...function* () {
-      for (const [key, value] of Object.entries(additionalPrismaDatasourceProperties ?? {})) {
-        yield `  ${key} = "${value}"`
-      }
-    }(),
     `}`,
     ``,
     `generator client {`,
     `  provider = "prisma-client-js"`,
     ...(prismaClientPath === '@prisma/client' ? [] : [`  output = "${prismaClientPath}"`]),
-    ...(prismaPreviewFeatures?.length
-      ? [`  previewFeatures = ["${prismaPreviewFeatures.join('","')}"]`]
-      : []),
     '}',
   ]
 

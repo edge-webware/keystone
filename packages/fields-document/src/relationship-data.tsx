@@ -91,7 +91,7 @@ export async function fetchRelationshipData (
   const labelField = getLabelFieldsForLists(context.graphql.schema)[listKey]
   const val = (await context.graphql.run({
     query: `query($ids: [ID!]!) {items:${
-      context.gqlNames(listKey).listQueryName
+      context.__internal.lists[listKey].graphql.names.listQueryName
     }(where: { id: { in: $ids } }) {${idFieldAlias}:id ${labelFieldAlias}:${labelField}\n${
       selection || ''
     }}}`,
@@ -122,23 +122,12 @@ async function fetchDataForOne (
   // errors from the GraphQL field resolver.
   const val = (await context.graphql.run({
     query: `query($id: ID!) {item:${
-      context.gqlNames(listKey).itemQueryName
+      context.__internal.lists[listKey].graphql.names.itemQueryName
     }(where: {id:$id}) {${labelFieldAlias}:${labelField}\n${selection}}}`,
     variables: { id },
   })) as { item: Record<string, any> | null }
 
-  if (val.item === null) {
-    // TODO: remove
-    if (!process.env.TEST_ADAPTER) {
-      // If we're unable to find the item (e.g. we have a dangling reference), or access was denied
-      // then simply return { id } and leave `label` and `data` undefined.
-      console.error(
-        `Unable to fetch relationship data: listKey: ${listKey}, many: false, selection: ${selection}, id: ${id} `
-      )
-    }
-    return { id, data: undefined, label: undefined }
-  }
-
+  if (val.item === null) return { id, data: undefined, label: undefined }
   return {
     id,
     label: val.item[labelFieldAlias],

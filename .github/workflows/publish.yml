@@ -15,15 +15,15 @@ jobs:
 
       - uses: ./.github/actions/ci-setup
 
-      - run: pnpm build
-
       - name: git config
         run: |
           git config --global user.name 'Keystonejs Release Bot'
           git config --global user.email 'automation+keystonejs@thinkmill.com.au'
 
+      - run: pnpm build
+
       - name: npm publish, git tag
-        run: pnpm changeset publish --tag latest
+        run: pnpm changeset publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

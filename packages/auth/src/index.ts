@@ -269,7 +269,7 @@ export function createAuth<ListTypeInfo extends BaseListTypeInfo> ({
           return isAccessAllowed(context)
         },
 
-        pageMiddleware: async args => {
+        pageMiddleware: async (args) => {
           const shouldRedirect = await authMiddleware(args)
           if (shouldRedirect) return shouldRedirect
           return pageMiddleware?.(args)
@@ -279,11 +279,18 @@ export function createAuth<ListTypeInfo extends BaseListTypeInfo> ({
 
     if (!config.session) throw new TypeError('Missing .session configuration')
 
-    const { extendGraphqlSchema = defaultExtendGraphqlSchema } = config
+    const { graphql } = config
+    const { extendGraphqlSchema = defaultExtendGraphqlSchema } = graphql ?? {}
     const authListConfig = config.lists[listKey]
 
     return {
       ...config,
+      graphql: {
+        ...config.graphql,
+        extendGraphqlSchema: (schema) => {
+          return extendGraphqlSchema(authExtendGraphqlSchema(schema))
+        },
+      },
       ui,
       session: authSessionStrategy(config.session),
       lists: {
@@ -295,9 +302,6 @@ export function createAuth<ListTypeInfo extends BaseListTypeInfo> ({
             ...authFields,
           },
         },
-      },
-      extendGraphqlSchema: schema => {
-        return extendGraphqlSchema(authExtendGraphqlSchema(schema))
       },
     }
   }

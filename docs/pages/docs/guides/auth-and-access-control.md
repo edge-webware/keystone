@@ -203,11 +203,12 @@ type Session = {
 We can now set up **operation** access control to restrict the **create**, **update** and **delete** operations to authenticated users with the `isAdmin` checkbox set:
 
 ```ts
-const isAdmin = ({ session }: { session: Session }) => session?.data.isAdmin;
+const isAdmin = ({ session }: { session: Session }) => Boolean(session?.data.isAdmin);
 
 const Post = list({
   access: {
     operation: {
+      query: isAdmin,
       create: isAdmin,
       update: isAdmin,
       delete: isAdmin,
@@ -432,11 +433,14 @@ When you need it, you can call `context.sudo()` to create a new context with ele
 For example, we probably want to block all public access to querying users in our system:
 
 ```ts
-const isAdmin = ({ session }: { session: Session }) => session?.data.isAdmin;
+const isAdmin = ({ session }: { session: Session }) => Boolean(session?.data.isAdmin);
 
 const Person = list({
   access: {
     query: isAdmin,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin
   },
   fields: {
     // see above
@@ -484,6 +488,10 @@ You can provide field-level rules for:
 If you want to completely block users from setting a field's value, make sure you set both the `create` and `update` rules.
 {% /hint %}
 
+{% hint kind="warn" %}
+`read` field access control does not apply to `context.db.*` operations, as these operations do not resolve the underlying fields using GraphQL.
+{% /hint %}
+
 For more information about the arguments provided to field rules, see the [Access Control API Docs](../config/access-control#field-access-control)
 
 ### People Example
@@ -515,7 +523,7 @@ const isUser = ({ session }: { session: Session }) =>
 
 // Validate the current user is an Admin
 const isAdmin = ({ session }: { session: Session }) =>
-  session?.data.isAdmin;
+  Boolean(session?.data.isAdmin);
 
 // Validate the current user is updating themselves
 const isPerson = ({ session, item }: { session: Session, item: PersonData }) =>
@@ -528,7 +536,9 @@ const isAdminOrPerson = ({ session, item }: { session: Session, item: PersonData
 const Person = list({
   access: {
     operation: {
+      query: isAdmin,
       create: isAdmin,
+      update: isAdmin,      
       delete: isAdmin,
     },
     item: {

@@ -1,9 +1,20 @@
-import type { IncomingMessage, ServerResponse } from 'http'
-import { type ExecutionResult, graphql, type GraphQLSchema, print } from 'graphql'
-import type { KeystoneContext, KeystoneGraphQLAPI, KeystoneConfig } from '../../types'
+import {
+  type IncomingMessage,
+  type ServerResponse
+} from 'http'
+import {
+  type ExecutionResult,
+  type GraphQLSchema,
+  graphql,
+  print
+} from 'graphql'
+import {
+  type KeystoneContext,
+  type KeystoneGraphQLAPI,
+  type __ResolvedKeystoneConfig,
+} from '../../types'
 
-import type { PrismaClient } from '../core/utils'
-import type { InitialisedList } from '../core/initialise-lists'
+import { type InitialisedList } from '../core/initialise-lists'
 import { createImagesContext } from '../assets/createImagesContext'
 import { createFilesContext } from '../assets/createFilesContext'
 import { getDbFactory, getQueryFactory } from './api'
@@ -14,12 +25,17 @@ export function createContext ({
   graphQLSchema,
   graphQLSchemaSudo,
   prismaClient,
+  prismaTypes
 }: {
-  config: KeystoneConfig
+  config: __ResolvedKeystoneConfig
   lists: Record<string, InitialisedList>
   graphQLSchema: GraphQLSchema
   graphQLSchemaSudo: GraphQLSchema
-  prismaClient: PrismaClient
+  prismaClient: unknown
+  prismaTypes: {
+    DbNull: unknown,
+    JsonNull: unknown
+  }
 }) {
   const dbFactories: Record<string, ReturnType<typeof getDbFactory>> = {}
   for (const [listKey, list] of Object.entries(lists)) {
@@ -45,26 +61,24 @@ export function createContext ({
   const files = createFilesContext(config)
   const construct = ({
     session,
-    sudo = false,
+    sudo,
     req,
     res,
   }: {
-    sudo?: Boolean
+    session?: unknown
+    sudo: Boolean
     req?: IncomingMessage
     res?: ServerResponse
-    session?: unknown
-  } = {}) => {
+  }) => {
     const schema = sudo ? graphQLSchemaSudo : graphQLSchema
-    const rawGraphQL: KeystoneGraphQLAPI['raw'] = ({ query, variables }) => {
+    const rawGraphQL: KeystoneGraphQLAPI['raw'] = async ({ query, variables }) => {
       const source = typeof query === 'string' ? query : print(query)
-      return Promise.resolve(
-        graphql({
-          schema,
-          source,
-          contextValue: context,
-          variableValues: variables,
-        }) as ExecutionResult<any>
-      )
+      return await graphql({
+        schema,
+        source,
+        contextValue: context,
+        variableValues: variables,
+      }) as ExecutionResult<any>
     }
 
     const runGraphQL: KeystoneGraphQLAPI['run'] = async ({ query, variables }) => {
@@ -80,9 +94,7 @@ export function createContext ({
         req: newReq,
         res: newRes,
       })
-      return newContext.withSession(
-        config.session ? await config.session.get({ context: newContext }) : undefined
-      )
+      return newContext.withSession(await config.session?.get({ context: newContext }) ?? undefined)
     }
 
     const context: KeystoneContext = {
@@ -92,7 +104,6 @@ export function createContext ({
       prisma: prismaClient,
 
       sudo: () => construct({ session, sudo: true, req, res }),
-      exitSudo: () => construct({ session, sudo: false, req, res }), // TODO: remove, deprecated
 
       req,
       res,
@@ -107,14 +118,12 @@ export function createContext ({
       images,
       files,
 
-      // TODO: remove, deprecated
-      gqlNames: (listKey: string) => lists[listKey].graphql.names,
-
-      ...(config.experimental?.contextInitialisedLists
-        ? {
-            experimental: { initialisedLists: lists },
-          }
-        : {}),
+      __internal: {
+        lists,
+        prisma: {
+          ...prismaTypes
+        }
+      }
     }
 
     const _dbFactories = sudo ? dbFactoriesSudo : dbFactories
@@ -128,5 +137,8 @@ export function createContext ({
     return context
   }
 
-  return construct()
+  return construct({
+    session: undefined,
+    sudo: false
+  })
 }

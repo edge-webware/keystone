@@ -1,5 +1,87 @@
 # @keystone-6/core
 
+## 6.0.0
+
+### Major Changes
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Removes unused type parameters from types `ListConfig` and `ListAdminUIConfig`
+
+- [#9088](https://github.com/keystonejs/keystone/pull/9088) [`7bbc613`](https://github.com/keystonejs/keystone/commit/7bbc613f02f14d86d45b189ce06def2389356aa2) Thanks [@dcousens](https://github.com/dcousens)! - Upgrade `@prisma/*` packages to `5.12.1`
+
+- [#8776](https://github.com/keystonejs/keystone/pull/8776) [`e382f9e`](https://github.com/keystonejs/keystone/commit/e382f9ead3ad2b94a966651d516b8010b854e220) Thanks [@dcousens](https://github.com/dcousens)! - Change `keystone prisma` behaviour to first require `keystone build` (or `keystone dev`)
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove the deprecated type parameters from the `list` and `group` functions
+
+- [#9085](https://github.com/keystonejs/keystone/pull/9085) [`70ffa67`](https://github.com/keystonejs/keystone/commit/70ffa67e6a9d421c78616c72ddc97cb698c189ff) Thanks [@dcousens](https://github.com/dcousens)! - Removes `AdminUIConfig`, `DatabaseConfig`, `GraphQLConfig` and `ServerConfig` from `@keystone-6/core/types`, and some unused types - instead use `KeystoneConfig['ui']`, `KeystoneConfig['db']` and so on
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Removes `graphqlSchema` parameter from `extendHttpServer`, use `context.graphql.schema` instead
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Moves `config.extendGraphqlSchema` to `config.graphql.extendGraphqlSchema`, similar to `db.extendPrismaSchema`
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove `KeystoneConfig` parameter from getAdditionalFiles function type
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove the deprecated `context.exitSudo` from `KeystoneContext`
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove `context.experimental.initialisedLists`, use `context.__internal.lists` (may break in patch)
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove `ExtendGraphqlSchema` type alias, use `(schema: GraphQLSchema) => GraphQLSchema` instead (with `import type { GraphQLSchema } from 'graphql'`).
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove the deprecated (#8721) `config.server.healthCheck`, use `extendExpressApp` instead
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Removes `ListSchemaConfig` type, use `KeystoneConfig['lists']` instead
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove `db.additionalPrismaDatasourceProperties`, use `extendPrismaSchema` if needed
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove `db.prismaPreviewFeatures`, use `extendPrismaSchema` if needed
+
+- [#9083](https://github.com/keystonejs/keystone/pull/9083) [`d609c6b`](https://github.com/keystonejs/keystone/commit/d609c6b052622658fe9e62d75c3c574611072efe) Thanks [@dcousens](https://github.com/dcousens)! - Remove `any` type parameter from `SessionStore`/`SessionStoreFunction` types
+
+- [#9085](https://github.com/keystonejs/keystone/pull/9085) [`70ffa67`](https://github.com/keystonejs/keystone/commit/70ffa67e6a9d421c78616c72ddc97cb698c189ff) Thanks [@dcousens](https://github.com/dcousens)! - Removes `@keystone-6/core/system` from exports
+
+- [#9090](https://github.com/keystonejs/keystone/pull/9090) [`e21c117`](https://github.com/keystonejs/keystone/commit/e21c117f9ed316f54b4baa1972489c997c73d7ad) Thanks [@dcousens](https://github.com/dcousens)! - Remove deprecated `config.db.useMigrations`, use `--with-migrations` process argument or `keystone prisma migrate [dev|deploy]` instead
+
+- [#9079](https://github.com/keystonejs/keystone/pull/9079) [`2e5b086`](https://github.com/keystonejs/keystone/commit/2e5b08625e5b8418d480b7054ea5d45eb19c02e4) Thanks [@dcousens](https://github.com/dcousens)! - Changes `file` and `image` to use random 128-bit `base64url` identifiers by default, not `uuid`
+
+### Minor Changes
+
+- [#8776](https://github.com/keystonejs/keystone/pull/8776) [`e382f9e`](https://github.com/keystonejs/keystone/commit/e382f9ead3ad2b94a966651d516b8010b854e220) Thanks [@dcousens](https://github.com/dcousens)! - `KS_PRISMA_ERRORS` are now logged with `console.error` on the server
+
+### Patch Changes
+
+- [#9090](https://github.com/keystonejs/keystone/pull/9090) [`e21c117`](https://github.com/keystonejs/keystone/commit/e21c117f9ed316f54b4baa1972489c997c73d7ad) Thanks [@dcousens](https://github.com/dcousens)! - Fix `--no-server` being ignored by `keystone start`
+
+## 5.8.0
+
+### Minor Changes
+
+- [#9057](https://github.com/keystonejs/keystone/pull/9057) [`1b55b41`](https://github.com/keystonejs/keystone/commit/1b55b41248ffcea0322d024a333169549ccf111c) Thanks [@dcousens](https://github.com/dcousens)! - Adds `{field}.hooks.validate.[create|update|delete]` hooks, deprecates `validateInput` and `validateDelete` (throws if incompatible)
+
+- [#9056](https://github.com/keystonejs/keystone/pull/9056) [`3d20b94`](https://github.com/keystonejs/keystone/commit/3d20b94f8791225bf832b4c8d83d9235b6cc103b) Thanks [@dcousens](https://github.com/dcousens)! - Adds `{list}.hooks.validate.[create|update|delete]` hooks, deprecates `validateInput` and `validateDelete`
+
+- [#9026](https://github.com/keystonejs/keystone/pull/9026) [`8147976`](https://github.com/keystonejs/keystone/commit/8147976e90998d3d6e96f177d7f3370feeadf8d1) Thanks [@dcousens](https://github.com/dcousens)! - Add `async` to `extendHttpServer`, to support `await` on startup
+
+### Patch Changes
+
+- [#9027](https://github.com/keystonejs/keystone/pull/9027) [`18eed93`](https://github.com/keystonejs/keystone/commit/18eed93868f8e769f84ec6c81025d7694252b98f) Thanks [@dcousens](https://github.com/dcousens)! - Use `db.idField` of `{ kind: 'number', kind: 'Int' }` internally for singletons
+
+- [#9042](https://github.com/keystonejs/keystone/pull/9042) [`ee1bdac`](https://github.com/keystonejs/keystone/commit/ee1bdaca34412d1b1fbea6dec3ce46e0f33d67f6) Thanks [@dcousens](https://github.com/dcousens)! - Fix static relationship resolution errors to conform to nominal error structure
+
+- [#9026](https://github.com/keystonejs/keystone/pull/9026) [`8147976`](https://github.com/keystonejs/keystone/commit/8147976e90998d3d6e96f177d7f3370feeadf8d1) Thanks [@dcousens](https://github.com/dcousens)! - Fix `config.server.cors` type preventing value of `false`
+
+- [#8809](https://github.com/keystonejs/keystone/pull/8809) [`c0dacbf`](https://github.com/keystonejs/keystone/commit/c0dacbf3426961e645a56fb9451415ac6b561b0e) Thanks [@dcousens](https://github.com/dcousens)! - Fix `defaultIsFilterable` and `defaultIsOrderable` types preventing value of `true`
+
+- [#9029](https://github.com/keystonejs/keystone/pull/9029) [`f125787`](https://github.com/keystonejs/keystone/commit/f125787946ed41ac5d7d097fa33608f27da14654) Thanks [@dcousens](https://github.com/dcousens)! - Fixes `createExpressApp` to use `context.graphql.schema`, not the GraphQLSchema argument
+
+- [#9028](https://github.com/keystonejs/keystone/pull/9028) [`d828013`](https://github.com/keystonejs/keystone/commit/d828013079dbbe29ef5cbd10f580cc9a85548996) Thanks [@dcousens](https://github.com/dcousens)! - Deprecates `extendHttpServer`'s `graphqlSchema` argument, use `context.graphql.schema` instead
+
+- [#9029](https://github.com/keystonejs/keystone/pull/9029) [`f125787`](https://github.com/keystonejs/keystone/commit/f125787946ed41ac5d7d097fa33608f27da14654) Thanks [@dcousens](https://github.com/dcousens)! - Deprecates `ExtendGraphQLSchema` type, use type `(schema: GraphQLSchema) => GraphQLSchema` instead
+
+- [#8809](https://github.com/keystonejs/keystone/pull/8809) [`c0dacbf`](https://github.com/keystonejs/keystone/commit/c0dacbf3426961e645a56fb9451415ac6b561b0e) Thanks [@dcousens](https://github.com/dcousens)! - Fix global locking by dropping global `p-limit` on `context.query`/`context.db`
+
+- [#9017](https://github.com/keystonejs/keystone/pull/9017) [`3cb0cce`](https://github.com/keystonejs/keystone/commit/3cb0cceef7a0b55d0ea7998ca00654c7eb217bde) Thanks [@dcousens](https://github.com/dcousens)! - Fix `image` field type to use consistent sub-field ordering
+
+- [#9057](https://github.com/keystonejs/keystone/pull/9057) [`1b55b41`](https://github.com/keystonejs/keystone/commit/1b55b41248ffcea0322d024a333169549ccf111c) Thanks [@dcousens](https://github.com/dcousens)! - Fixes the `text` field type to accept a `defaultValue` of `null`
+
 ## 5.7.2
 
 ### Patch Changes
@@ -1659,8 +1741,8 @@
   config({
     server: {
       healthCheck: {
-        path: '/my-health-check',
-        data: { status: 'healthy' },
+        path: "/my-health-check",
+        data: { status: "healthy" },
       },
     },
   });
@@ -1672,9 +1754,9 @@
   config({
     server: {
       healthCheck: {
-        path: '/my-health-check',
+        path: "/my-health-check",
         data: () => ({
-          status: 'healthy',
+          status: "healthy",
           timestamp: Date.now(),
           uptime: process.uptime(),
         }),
@@ -2713,7 +2795,9 @@
   For example, to find the title and author name for all posts in our system we would run:
 
   ```js
-  const posts = await context.lists.Post.findMany({ resolveFields: 'id title author { id name }' });
+  const posts = await context.lists.Post.findMany({
+    resolveFields: "id title author { id name }",
+  });
   ```
 
   If `resolveFields: false` is provided, this indicates to the method that no field-resolving is desired.
@@ -2737,7 +2821,7 @@
           return context.lists.Post.findMany({
             where: { user: { id: userId } },
             first: 1,
-            sortBy: ['stars_DESC'],
+            sortBy: ["stars_DESC"],
             resolveFields: false,
           });
         },

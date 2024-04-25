@@ -7,7 +7,7 @@ import { type GraphQLSchema } from 'graphql'
 import { type Entry, walk as _walk } from '@nodelib/fs.walk'
 import {
   type AdminFileToWrite,
-  type KeystoneConfig
+  type __ResolvedKeystoneConfig
 } from '../../types'
 import { writeAdminFiles } from '../templates'
 import { type AdminMetaRootVal } from '../../lib/create-admin-meta'
@@ -66,7 +66,7 @@ export async function writeAdminFile (file: AdminFileToWrite, projectAdminPath: 
 const pageExtensions = new Set(['.js', '.jsx', '.ts', '.tsx'])
 
 export async function generateAdminUI (
-  config: KeystoneConfig,
+  config: __ResolvedKeystoneConfig,
   graphQLSchema: GraphQLSchema,
   adminMeta: AdminMetaRootVal,
   projectAdminPath: string,
@@ -91,7 +91,7 @@ export async function generateAdminUI (
   }
 
   // Write out the files configured by the user
-  const userFiles = config.ui?.getAdditionalFiles?.map(x => x(config)) ?? []
+  const userFiles = config.ui?.getAdditionalFiles?.map(x => x()) ?? []
   const userFilesToWrite = (await Promise.all(userFiles)).flat()
   const savedFiles = await Promise.all(
     userFilesToWrite.map(file => writeAdminFile(file, projectAdminPath))

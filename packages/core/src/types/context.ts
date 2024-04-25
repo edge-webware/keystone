@@ -13,22 +13,25 @@ export type KeystoneContext<TypeInfo extends BaseKeystoneTypeInfo = BaseKeystone
   query: KeystoneListsAPI<TypeInfo['lists']>
   graphql: KeystoneGraphQLAPI
   sudo: () => KeystoneContext<TypeInfo>
-  exitSudo: () => KeystoneContext<TypeInfo>
   withSession: (session?: TypeInfo['session']) => KeystoneContext<TypeInfo>
   withRequest: (req: IncomingMessage, res?: ServerResponse) => Promise<KeystoneContext<TypeInfo>>
   prisma: TypeInfo['prisma']
   files: FilesContext
   images: ImagesContext
-  /** @deprecated */
-  gqlNames: (listKey: string) => InitialisedList['graphql']['names']
-  experimental?: {
-    /** @deprecated This value is only available if you have config.experimental.contextInitialisedLists = true.
-     * This is not a stable API and may contain breaking changes in `patch` level releases.
-     */
-    initialisedLists: Record<string, InitialisedList>
-  }
   sessionStrategy?: SessionStrategy<TypeInfo['session'], TypeInfo>
   session?: TypeInfo['session']
+
+
+  /**
+   * WARNING: may change in patch
+   */
+  __internal: {
+    lists: Record<string, InitialisedList>
+    prisma: {
+      DbNull: unknown
+      JsonNull: unknown
+    }
+  }
 }
 
 // List item API
@@ -159,8 +162,6 @@ type GraphQLExecutionArguments<TData, TVariables> = {
 }
 
 // Files API
-
-export type AssetMode = 'local' | 's3'
 
 export type FileMetadata = {
   filename: string

@@ -1,7 +1,7 @@
 {
   "name": "@keystone-6/fields-document",
   "description": "KeystoneJS Document Field Type",
-  "version": "8.0.2",
+  "version": "9.0.0",
   "license": "MIT",
   "main": "dist/keystone-6-fields-document.cjs.js",
   "module": "dist/keystone-6-fields-document.esm.js",
@@ -75,19 +75,19 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "scroll-into-view-if-needed": "^3.0.0",
-    "slate": "^0.102.0",
+    "slate": "^0.103.0",
     "slate-history": "^0.100.0",
     "slate-react": "^0.102.0"
   },
   "devDependencies": {
     "@keystone-6/core": "workspace:^",
-    "@testing-library/react": "^14.0.0",
+    "@testing-library/react": "^15.0.0",
     "@types/is-hotkey": "^0.1.7",
     "jest-diff": "^29.0.0",
     "pretty-format": "^29.0.0",
     "slate-hyperscript": "^0.100.0"
   },
   "peerDependencies": {
-    "@keystone-6/core": "^5.0.0"
+    "@keystone-6/core": "^6.0.0"
   }
 }

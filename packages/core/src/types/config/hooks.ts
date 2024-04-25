@@ -1,5 +1,10 @@
-import type { KeystoneContextFromListTypeInfo, MaybePromise } from '..'
-import type { BaseListTypeInfo } from '../type-info'
+import {
+  type KeystoneContextFromListTypeInfo,
+  type MaybePromise
+} from '..'
+import {
+  type BaseListTypeInfo
+} from '../type-info'
 
 type CommonArgs<ListTypeInfo extends BaseListTypeInfo> = {
   context: KeystoneContextFromListTypeInfo<ListTypeInfo>
@@ -52,13 +57,25 @@ export type ListHooks<ListTypeInfo extends BaseListTypeInfo> = {
         create?: ResolveInputListHook<ListTypeInfo, 'create'>
         update?: ResolveInputListHook<ListTypeInfo, 'update'>
       }
+
   /**
-   * Used to **validate the input** for create and update operations once all resolveInput hooks resolved
+   * Used to **validate** if a create, update or delete operation is OK
+   */
+  validate?:
+    | ValidateHook<ListTypeInfo, 'create' | 'update' | 'delete'>
+    | {
+        create?: ValidateHook<ListTypeInfo, 'create'>
+        update?: ValidateHook<ListTypeInfo, 'update'>
+        delete?: ValidateHook<ListTypeInfo, 'delete'>
+      }
+
+  /**
+   * @deprecated, replaced by validate^
    */
   validateInput?: ValidateHook<ListTypeInfo, 'create' | 'update'>
 
   /**
-   * Used to **validate** that a delete operation can happen after access control has occurred
+   * @deprecated, replaced by validate^
    */
   validateDelete?: ValidateHook<ListTypeInfo, 'delete'>
 
@@ -72,6 +89,7 @@ export type ListHooks<ListTypeInfo extends BaseListTypeInfo> = {
         update?: BeforeOperationListHook<ListTypeInfo, 'update'>
         delete?: BeforeOperationListHook<ListTypeInfo, 'delete'>
       }
+
   /**
    * Used to **cause side effects** after a create, update, or delete operation operation has occurred
    */
@@ -88,9 +106,12 @@ export type ResolvedListHooks<ListTypeInfo extends BaseListTypeInfo> = {
   resolveInput: {
     create: ResolveInputListHook<ListTypeInfo, 'create'>
     update: ResolveInputListHook<ListTypeInfo, 'update'>
-  }
-  validateInput: ValidateHook<ListTypeInfo, 'create' | 'update'>
-  validateDelete: ValidateHook<ListTypeInfo, 'delete'>
+  },
+  validate: {
+    create: ValidateHook<ListTypeInfo, 'create'>
+    update: ValidateHook<ListTypeInfo, 'update'>
+    delete: ValidateHook<ListTypeInfo, 'delete'>
+  },
   beforeOperation: {
     create: BeforeOperationListHook<ListTypeInfo, 'create'>
     update: BeforeOperationListHook<ListTypeInfo, 'update'>
@@ -110,23 +131,42 @@ export type FieldHooks<
   /**
    * Used to **modify the input** for create and update operations after default values and access control have been applied
    */
-  resolveInput?: ResolveInputFieldHook<ListTypeInfo, 'create' | 'update', FieldKey>
+  resolveInput?:
+    | ResolveInputFieldHook<ListTypeInfo, 'create' | 'update', FieldKey>
+// TODO: add in breaking change
+//      | {
+//          create?: ResolveInputFieldHook<ListTypeInfo, 'create', FieldKey>
+//          update?: ResolveInputFieldHook<ListTypeInfo, 'update', FieldKey>
+//        }
+
   /**
+   * Used to **validate** if a create, update or delete operation is OK
+   */
+  validate?:
+    | ValidateFieldHook<ListTypeInfo, 'create' | 'update' | 'delete', FieldKey>
+    | {
+        create?: ValidateFieldHook<ListTypeInfo, 'create', FieldKey>
+        update?: ValidateFieldHook<ListTypeInfo, 'update', FieldKey>
+        delete?: ValidateFieldHook<ListTypeInfo, 'delete', FieldKey>
+      }
+
+  /**
+   * @deprecated, replaced by validate^
    * Used to **validate the input** for create and update operations once all resolveInput hooks resolved
    */
   validateInput?: ValidateFieldHook<ListTypeInfo, 'create' | 'update', FieldKey>
+
   /**
+   * @deprecated, replaced by validate^
    * Used to **validate** that a delete operation can happen after access control has occurred
    */
   validateDelete?: ValidateFieldHook<ListTypeInfo, 'delete', FieldKey>
+
   /**
    * Used to **cause side effects** before a create, update, or delete operation once all validateInput hooks have resolved
    */
-  beforeOperation?: BeforeOperationFieldHook<
-    ListTypeInfo,
-    'create' | 'update' | 'delete',
-    FieldKey
-  >
+  beforeOperation?: BeforeOperationFieldHook<ListTypeInfo, 'create' | 'update' | 'delete', FieldKey>
+
   /**
    * Used to **cause side effects** after a create, update, or delete operation operation has occurred
    */
@@ -141,8 +181,11 @@ export type ResolvedFieldHooks<
     create: ResolveInputFieldHook<ListTypeInfo, 'create', FieldKey>
     update: ResolveInputFieldHook<ListTypeInfo, 'update', FieldKey>
   }
-  validateInput: ValidateFieldHook<ListTypeInfo, 'create' | 'update', FieldKey>
-  validateDelete: ValidateFieldHook<ListTypeInfo, 'delete', FieldKey>
+  validate: {
+    create: ValidateFieldHook<ListTypeInfo, 'create', FieldKey>
+    update: ValidateFieldHook<ListTypeInfo, 'update', FieldKey>
+    delete: ValidateFieldHook<ListTypeInfo, 'delete', FieldKey>
+  },
   beforeOperation: {
     create: BeforeOperationFieldHook<ListTypeInfo, 'create', FieldKey>
     update: BeforeOperationFieldHook<ListTypeInfo, 'update', FieldKey>
@@ -250,7 +293,6 @@ type ValidateFieldHook<
        * The GraphQL input **after** being resolved by the field type's input resolver
        */
       resolvedData: ListTypeInfo['prisma']['create']
-      addValidationError: (error: string) => void
     }
     update: {
       operation: 'update'
@@ -263,17 +305,18 @@ type ValidateFieldHook<
        * The GraphQL input **after** being resolved by the field type's input resolver
        */
       resolvedData: ListTypeInfo['prisma']['update']
-      addValidationError: (error: string) => void
     }
     delete: {
       operation: 'delete'
       item: ListTypeInfo['item']
-      inputData: undefined // TODO: remove?
-      resolvedData: undefined // TODO: remove?
-      addValidationError: (error: string) => void
+      inputData: undefined
+      resolvedData: undefined
     }
   }[Operation] &
-    CommonArgs<ListTypeInfo> & { fieldKey: FieldKey }
+    CommonArgs<ListTypeInfo> & {
+      fieldKey: FieldKey
+      addValidationError: (error: string) => void
+    }
 ) => MaybePromise<void>
 
 type BeforeOperationListHook<

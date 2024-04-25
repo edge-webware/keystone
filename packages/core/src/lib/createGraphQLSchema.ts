@@ -1,7 +1,9 @@
 import { type GraphQLNamedType, GraphQLSchema } from 'graphql'
 
 import { graphql } from '../types/schema'
-import type { KeystoneConfig } from '../types'
+import {
+  type __ResolvedKeystoneConfig
+} from '../types'
 import { KeystoneMeta } from './admin-meta-resolver'
 import type { AdminMetaRootVal } from './create-admin-meta'
 import type { InitialisedList } from './core/initialise-lists'
@@ -95,7 +97,7 @@ function collectTypes (
 }
 
 export function createGraphQLSchema (
-  config: KeystoneConfig,
+  config: __ResolvedKeystoneConfig,
   lists: Record<string, InitialisedList>,
   adminMeta: AdminMetaRootVal | null,
   sudo: boolean
@@ -127,9 +129,5 @@ export function createGraphQLSchema (
   )
 
   // merge in the user defined graphQL API
-  if (config.extendGraphqlSchema) {
-    return config.extendGraphqlSchema(graphQLSchema)
-  }
-
-  return graphQLSchema
+  return config.graphql?.extendGraphqlSchema?.(graphQLSchema) ?? graphQLSchema
 }
