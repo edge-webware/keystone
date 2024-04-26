@@ -352,7 +352,7 @@ const relationshipSelectComponents: Partial<typeof selectComponents> = {
   MenuList: ({ children, ...props }) => {
     const { count, ref } = useContext(LoadingIndicatorContext)
     return (
-      <selectComponents.MenuList {...props}>
+      <selectComponents.MenuList {...props} css={{ zIndex: 50 }}>
         {children}
         <div css={{ textAlign: 'center' }} ref={ref}>
           {props.options.length < count && <span css={{ padding: 8 }}>Loading...</span>}

@@ -76,6 +76,38 @@ const inline = t.union([text, link, relationship])
 
 type Children = (Block | Inline)[]
 
+type Background = {
+  type: 'background';
+  backgroundSettings: {
+    type: string;
+    value: string;
+    contrast: string;
+    imageSettings: {
+      fixed: boolean;
+      repeating: boolean;
+    } | null;
+  }
+  children: Children;
+}
+
+const backgroundContainer: t.Type<Background> = t.recursion('BackgroundContainer', () =>
+  excess(
+    t.type({
+      type: t.literal('background'),
+      backgroundSettings: t.type({
+        type: t.string,
+        value: t.string,
+        contrast: t.string,
+        imageSettings: t.union([t.null, t.type({
+          repeating: t.boolean,
+          fixed: t.boolean,
+        })])
+      }),
+      children,
+    })
+  )
+);
+
 const layoutArea: t.Type<Layout> = t.recursion('Layout', () =>
   excess(
     t.type({
@@ -97,6 +129,7 @@ const onlyChildrenElements: t.Type<OnlyChildrenElements> = t.recursion('OnlyChil
     t.type({
       type: t.union([
         t.literal('blockquote'),
+        t.literal('background'),
         t.literal('layout-area'),
         t.literal('code'),
         t.literal('divider'),
@@ -113,6 +146,7 @@ const onlyChildrenElements: t.Type<OnlyChildrenElements> = t.recursion('OnlyChil
 type OnlyChildrenElements = {
   type:
     | 'blockquote'
+    | 'background'
     | 'layout-area'
     | 'code'
     | 'divider'
@@ -211,8 +245,8 @@ const componentProp: t.Type<ComponentProp> = t.recursion('ComponentProp', () =>
 type Block = Layout | OnlyChildrenElements | Heading | ComponentBlock | ComponentProp | Paragraph
 
 const block: t.Type<Block> = t.recursion('Element', () =>
-  t.union([layoutArea, onlyChildrenElements, heading, componentBlock, componentProp, paragraph])
-)
+  t.union([layoutArea, onlyChildrenElements, heading, componentBlock, componentProp, paragraph, backgroundContainer])
+);
 
 export type ElementFromValidation = Block | Inline
 

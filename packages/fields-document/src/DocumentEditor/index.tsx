@@ -46,6 +46,8 @@ import { ToolbarStateProvider } from './toolbar-state'
 import { withInsertMenu } from './insert-menu'
 import { withBlockMarkdownShortcuts } from './block-markdown-shortcuts'
 import { withPasting } from './pasting'
+import { withBackgrounds } from './background';
+import { paragraphElement } from './paragraphs';
 
 // the docs site needs access to Editor and importing slate would use the version from the content field
 // so we're exporting it from here (note that this is not at all visible in the published version)
@@ -283,7 +285,8 @@ export function DocumentEditorProvider ({
   documentFeatures: DocumentFeatures
 }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const identity = useMemo(() => Math.random().toString(36), [editor])
+  const identity = useMemo(() => Math.random().toString(36), [editor]);
+
   return (
     <Slate
       // this fixes issues with Slate crashing when a fast refresh occcurs
@@ -325,7 +328,8 @@ export function DocumentEditorEditable (props: EditableProps) {
     <Editable
       decorate={useCallback(
         ([node, path]: NodeEntry<Node>) => {
-          let decorations: Range[] = []
+          let decorations: Range[] = [];
+
           if (node.type === 'component-block') {
             if (
               node.children.length === 1 &&
@@ -441,7 +445,7 @@ const blockquoteChildren = [
 
 const paragraphLike = [...blockquoteChildren, 'blockquote'] as const
 
-const insideOfLayouts = [...paragraphLike, 'component-block'] as const
+const insideOfLayouts = [...paragraphLike, 'component-block', 'background'] as const;
 
 function blockContainer (args: {
   allowedChildren: readonly [TypesWhichHaveNoExtraRequiredProps, ...Block['type'][]]
@@ -485,9 +489,13 @@ export const editorSchema = satisfies<
     allowedChildren: insideOfLayouts,
     invalidPositionHandleMode: 'unwrap',
   }),
+  background: blockContainer({
+    allowedChildren: [...insideOfLayouts, 'layout'],
+    invalidPositionHandleMode: 'move',
+  }),
   blockquote: blockContainer({
     allowedChildren: blockquoteChildren,
-    invalidPositionHandleMode: 'move',
+    invalidPositionHandleMode: 'unwrap',
   }),
   paragraph: inlineContainer({ invalidPositionHandleMode: 'unwrap' }),
   code: inlineContainer({ invalidPositionHandleMode: 'move' }),
@@ -603,9 +611,10 @@ function withBlocksSchema (editor: Editor): Editor {
         }
       }
     }
-    normalizeNode([node, path])
-  }
-  return editor
+
+    normalizeNode([node, path]);
+  };
+  return editor;
 }
 
 function handleNodeInInvalidPosition (
@@ -651,6 +660,7 @@ function handleNodeInInvalidPosition (
     }
     return
   }
+
   if (Editor.isEditor(parentNode)) {
     Transforms.moveNodes(editor, { at: path, to: [path[0] + 1] })
     Transforms.unwrapNodes(editor, { at: [path[0] + 1] })

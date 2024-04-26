@@ -44,12 +44,13 @@ interface Renderers {
     layout: Component<{ layout: [number, ...number[]], children: ReactElement[] }>
     divider: Component<{}> | keyof JSX.IntrinsicElements
     heading: Component<{
-      level: 1 | 2 | 3 | 4 | 5 | 6
-      children: ReactNode
-      textAlign: 'center' | 'end' | undefined
-    }>
-    list: Component<{ type: 'ordered' | 'unordered', children: ReactElement[] }>
-  }
+      level: 1 | 2 | 3 | 4 | 5 | 6;
+      children: ReactNode;
+      textAlign: 'center' | 'end' | undefined;
+    }>;
+    background: Component<{ backgroundSettings: { type: string, value: string, contrast: string, imageSettings: { fixed: boolean, repeating: boolean } | null }, children: ReactElement[] }>;
+    list: Component<{ type: 'ordered' | 'unordered'; children: ReactElement[] }>;
+  };
 }
 
 export const defaultRenderers: Renderers = {
@@ -87,6 +88,19 @@ export const defaultRenderers: Renderers = {
             <li key={i}>{x}</li>
           ))}
         </List>
+      )
+    },
+    background: ({ children, backgroundSettings }) => {
+      const { type, value, contrast } = backgroundSettings;
+      const style = {
+        backgroundColor: type === 'color' ? value : undefined,
+        color: contrast ? "black" : "white",
+      };
+
+      return (
+        <div style={style} className="background"> 
+          {children}
+        </div>
       )
     },
     layout: ({ children, layout }) => {
@@ -130,7 +144,8 @@ function DocumentNode ({
   const node = _node as Element
   const children = node.children.map((x, i) => (
     <DocumentNode node={x} componentBlocks={componentBlocks} renderers={renderers} key={i} />
-  ))
+  ));
+
   switch (node.type as string) {
     case 'blockquote': {
       return <renderers.block.blockquote children={children} />
@@ -150,6 +165,9 @@ function DocumentNode ({
     }
     case 'layout': {
       return <renderers.block.layout layout={node.layout as any} children={children} />
+    }
+    case 'background': {
+      return <renderers.block.background backgroundSettings={node.backgroundSettings as any} children={children} />;
     }
     case 'divider': {
       return <renderers.block.divider />
@@ -234,8 +252,9 @@ export function DocumentRenderer<ComponentBlocks extends Record<string, Componen
   const renderers = {
     inline: { ...defaultRenderers.inline, ...props.renderers?.inline },
     block: { ...defaultRenderers.block, ...props.renderers?.block },
-  }
-  const componentBlocks = props.componentBlocks || {}
+  };
+  const componentBlocks = props.componentBlocks || {};
+
   return (
     <Fragment>
       {props.document.map((x, i) => (

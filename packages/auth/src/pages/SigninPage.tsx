@@ -171,9 +171,9 @@ export function SigninPage ({
               Sign in
             </Button>
             {/* Disabled until we come up with a complete password reset workflow */}
-            {/* <Button weight="none" tone="active" onClick={() => setMode('forgot password')}>
+            <Button weight="none" tone="active" onClick={() => setMode('forgot password')}>
               Forgot your password?
-            </Button> */}
+            </Button>
           </Stack>
         )}
       </Stack>

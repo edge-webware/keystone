@@ -30,6 +30,19 @@ type Layout = {
   layout: number[]
 }
 
+type Background = {
+  type: 'background';
+  backgroundSettings: {
+    type: string;
+    value: string;
+    contrast: string;
+    imageSettings: {
+      fixed: boolean;
+      repeating: boolean;
+    };
+  };
+}
+
 type OnlyChildrenElements = {
   type:
     | 'blockquote'
@@ -66,6 +79,7 @@ type ComponentProp = {
 
 type Element = (
   | Layout
+  | Background
   | OnlyChildrenElements
   | Heading
   | ComponentBlock

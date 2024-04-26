@@ -83,6 +83,7 @@ export function normalizeElementBasedOnDocumentFeatures (
     formatting,
     dividers,
     layouts,
+    background,
     links,
     relationships: relationshipsEnabled,
   }: DocumentFeaturesForNormalization,
@@ -95,6 +96,7 @@ export function normalizeElementBasedOnDocumentFeatures (
     (node.type === 'unordered-list' && !formatting.listTypes.unordered) ||
     (node.type === 'code' && !formatting.blockTypes.code) ||
     (node.type === 'blockquote' && !formatting.blockTypes.blockquote) ||
+    (node.type === 'background' && !background) ||
     (node.type === 'layout' &&
       (layouts.length === 0 || !layouts.some(layout => areArraysEqual(layout, node.layout))))
   ) {

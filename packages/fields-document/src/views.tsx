@@ -98,15 +98,16 @@ export type DocumentFeatures = {
     }
     headingLevels: (1 | 2 | 3 | 4 | 5 | 6)[]
     blockTypes: {
-      blockquote: boolean
-      code: boolean
-    }
-    softBreaks: boolean
-  }
-  links: boolean
-  dividers: boolean
-  layouts: [number, ...number[]][]
-}
+      blockquote: boolean;
+      code: boolean;
+    };
+    softBreaks: boolean;
+  };
+  links: boolean;
+  dividers: boolean;
+  layouts: [number, ...number[]][];
+  background: boolean;
+};
 
 export const controller = (
   config: FieldControllerConfig<{

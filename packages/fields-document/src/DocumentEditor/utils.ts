@@ -145,8 +145,9 @@ export function insertNodesButReplaceIfSelectionIsAtEmptyParagraphOrHeading (
   if (entry && Node.string(entry[0]) === '') {
     pathRefForEmptyNodeAtCursor = Editor.pathRef(editor, entry[1])
   }
-  Transforms.insertNodes(editor, nodes)
-  let path = pathRefForEmptyNodeAtCursor?.unref()
+
+  Transforms.insertNodes(editor, nodes);
+  let path = pathRefForEmptyNodeAtCursor?.unref();
   if (path) {
     Transforms.removeNodes(editor, { at: path })
     // even though the selection is in the right place after the removeNodes

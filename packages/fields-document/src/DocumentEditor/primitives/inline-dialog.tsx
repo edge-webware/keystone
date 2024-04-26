@@ -30,6 +30,8 @@ export const InlineDialog = forwardRef<HTMLDivElement, Props>(({ isRelative, ...
         borderRadius: radii.small,
         boxShadow: `rgba(9, 30, 66, 0.31) 0px 0px 1px, rgba(9, 30, 66, 0.25) 0px 4px 8px -2px`,
         padding: spacing.small,
+        height: 'fit-content',
+        maxHeight: '90vh',
         position: 'absolute',
         userSelect: 'none',
         ...relativeStyles,

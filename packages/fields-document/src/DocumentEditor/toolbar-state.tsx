@@ -42,13 +42,14 @@ export type ToolbarState = {
   // note that layouts can't be disabled because they are inserted
   // so they will be inserted to the closest valid location
   // unlike the other things here which wrap elements
-  layouts: { isSelected: boolean }
-  dividers: { isDisabled: boolean }
-  code: BasicToolbarItem
-  relationships: { isDisabled: boolean }
-  editor: Editor
-  editorDocumentFeatures: DocumentFeatures
-}
+  layouts: { isSelected: boolean };
+  background: { isSelected: boolean };
+  dividers: { isDisabled: boolean };
+  code: BasicToolbarItem;
+  relationships: { isDisabled: boolean };
+  editor: Editor;
+  editorDocumentFeatures: DocumentFeatures;
+};
 
 const ToolbarStateContext = React.createContext<null | ToolbarState>(null)
 
@@ -111,6 +112,7 @@ export const createToolbarState = (
           listTypes: { ordered: true, unordered: true },
         },
         layouts: editorDocumentFeatures.layouts,
+        background: editorDocumentFeatures.background,
         links: true,
         relationships: true,
       },
@@ -244,6 +246,7 @@ export const createToolbarState = (
       isSelected: isElementActive(editor, 'blockquote'),
     },
     layouts: { isSelected: isElementActive(editor, 'layout') },
+    background: { isSelected: isElementActive(editor, 'background') },
     links: {
       isDisabled:
         !editor.selection ||
