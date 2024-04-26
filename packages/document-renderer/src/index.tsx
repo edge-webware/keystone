@@ -131,7 +131,22 @@ function DocumentNode ({
   componentBlocks: Record<string, Component<any>>
 }): ReactElement {
   if (typeof _node.text === 'string') {
-    let child = <Fragment>{_node.text}</Fragment>;
+    // To support soft breaks, we need to convert \n to <br />
+    let child = (
+      <Fragment>
+        {
+          _node.text.split('\n').map((text, i, arr) => {
+            return (
+              <Fragment key={i}>
+                {text}
+                {i < arr.length - 1 && <br />}
+              </Fragment>
+            );
+          })
+        }
+      </Fragment>
+    );
+
     (Object.keys(renderers.inline) as (keyof typeof renderers.inline)[]).forEach(markName => {
       if (markName !== 'link' && markName !== 'relationship' && _node[markName]) {
         const Mark = renderers.inline[markName]
