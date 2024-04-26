@@ -139,7 +139,7 @@ function DocumentNode ({
             return (
               <Fragment key={i}>
                 {text}
-                {i < arr.length - 1 && <br />}
+                {i < arr.length - 1 && <br className="soft-break" />}
               </Fragment>
             );
           })
